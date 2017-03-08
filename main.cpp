@@ -92,20 +92,29 @@ int main()
     std::cout << "Number of points in the pcd file: " << sceneRaw->size() << std::endl;
     std::cout << "Number of points after filtering and downsampling: " << sceneDownSampled->size() << std::endl;
 
+    //
     // Find corners.
-    pcl::HarrisKeypoint3D<pcl::PointXYZ, pcl::PointXYZ> cornerDetector;
-    pcl::PointCloud<pcl::PointXYZ>::Ptr corners(new pcl::PointCloud<pcl::PointXYZ>());
-    cornerDetector.setNonMaxSupression(true);
+    // Note: The output data type of HarrisKeypoint3D should contain intensity.
+    pcl::HarrisKeypoint3D<pcl::PointXYZ, pcl::PointXYZI> cornerDetector;
+    pcl::PointCloud<pcl::PointXYZI>::Ptr corners(new pcl::PointCloud<pcl::PointXYZI>());
     cornerDetector.setInputCloud(sceneDownSampled);
-    cornerDetector.setThreshold(1e-6);
+    cornerDetector.setNonMaxSupression(true);
+    cornerDetector.setRadius(0.1);
+    cornerDetector.setThreshold(1e-3);
     cornerDetector.compute(*corners);
 
-    // Visualization.
+    std::cout << "Number of corners: " << corners->size() << std::endl;
+
+    // Visualize corners.
     pcl::visualization::PCLVisualizer viewer("Scene");
-    viewer.addPointCloud(corners, "scene_cloud");
+    pcl::visualization::PointCloudColorHandlerGenericField<pcl::PointXYZI> handler(corners, "intensity");
+    viewer.addPointCloud(corners, handler, "scene_cloud");
     while (!viewer.wasStopped()) {
         viewer.spinOnce();
     }
+
+    //
+    // Search edges in the neighborhood of the corners and construct CVSFeatures.
 
     // // Visualization.
     // pcl::visualization::PCLVisualizer viewer("Scene");
