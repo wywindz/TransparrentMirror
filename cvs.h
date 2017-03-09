@@ -31,11 +31,16 @@ public:
     const std::vector<Eigen::Vector3f> & getVectors() const;
 
     std::vector<float> getIncludedAngles();
+    std::size_t getNumEdges();
 
 private:
     pcl::PointXYZ corner;
     std::vector<Eigen::Vector3f> edgeVectors;
 };
+
+// Refine CVS feature list, for example, remove extra features which are two close with each other or remove features
+// which have smaller edge number than the threshold.
+const std::vector<CVSFeature> refineCVSFeatureList(const std::vector<CVSFeature> & cvsFeatureList);
 
 class CVSEstimation
 {
@@ -43,20 +48,29 @@ public:
     CVSEstimation();
     ~CVSEstimation();
 
-    void setInputCloud(const pcl::PointCloud<pcl::PointXYZ>::Ptr ptrPointCloud);
+    // typedefs
+    typedef pcl::PointCloud<pcl::PointXYZ> PointCloud;
+    typedef boost::shared_ptr<const PointCloud> PointCloudConstPtr;
+
+
+    void setInputCloud(const PointCloudConstPtr & ptrPointCloud);
     void setRadius(float radius);
+    void setMinDistance(float distance);
     void setMinNumEdges(std::size_t numEdges);
     std::vector<CVSFeature> esimate();
 
     float getRadius();
+    float getMinDistance();
     std::size_t getMinNumEdges();
 
 private:
-    pcl::PointCloud<pcl::PointXYZ>::Ptr inputCloud;
-    float radiusRegion;
+    // pcl::PointCloud<pcl::PointXYZ>::ConstPtr inputCloud;
+    PointCloudConstPtr inputCloud;
+    float radiusNeighbor;
+    float minDistance;
     float minNumEdges;
 };
 
 } // namespace RADI
 
-#endif MIRROR_CVS_H_
+#endif // MIRROR_CVS_H_

@@ -92,43 +92,19 @@ int main()
     std::cout << "Number of points in the pcd file: " << sceneRaw->size() << std::endl;
     std::cout << "Number of points after filtering and downsampling: " << sceneDownSampled->size() << std::endl;
 
-    //
-    // Find corners.
-    // Note: The output data type of HarrisKeypoint3D should contain intensity.
-    pcl::HarrisKeypoint3D<pcl::PointXYZ, pcl::PointXYZI> cornerDetector;
-    pcl::PointCloud<pcl::PointXYZI>::Ptr corners(new pcl::PointCloud<pcl::PointXYZI>());
-    cornerDetector.setInputCloud(sceneDownSampled);
-    cornerDetector.setNonMaxSupression(true);
-    cornerDetector.setRadius(0.1);
-    cornerDetector.setThreshold(1e-3);
-    cornerDetector.compute(*corners);
+    RADI::CVSEstimation cvsEstimation;
+    cvsEstimation.setInputCloud(sceneDownSampled);
+    cvsEstimation.esimate();
 
-    std::cout << "Number of corners: " << corners->size() << std::endl;
-
-    // Visualize corners.
-    pcl::visualization::PCLVisualizer viewer("Scene");
-    pcl::visualization::PointCloudColorHandlerGenericField<pcl::PointXYZI> handler(corners, "intensity");
-    viewer.addPointCloud(corners, handler, "scene_cloud");
-    while (!viewer.wasStopped()) {
-        viewer.spinOnce();
-    }
-
-    //
-    // Search edges in the neighborhood of the corners and construct CVSFeatures.
-
-    // // Visualization.
+    // // Visualize corners.
     // pcl::visualization::PCLVisualizer viewer("Scene");
-    // viewer.addPointCloud(sceneDownSampled, "scene_cloud");
+    // pcl::visualization::PointCloudColorHandlerGenericField<pcl::PointXYZI> handler(corners, "intensity");
+    // viewer.addPointCloud(sceneDownSampled, "Scene Downsmapled");
+    // viewer.addPointCloud(corners, handler, "Corners");
+    // viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 7, "Corners");
     // while (!viewer.wasStopped()) {
     //     viewer.spinOnce();
     // }
-
-    // WY::IterativeClosestFace icf;
-    // icf.setReferenceModel("./object_test_icf.stl");
-    // icf.setScenePointCloud(downSampledCloudScene);
-    // std::cout << "Number of triangles in the model mesh: " << icf.getReferenceModel().getNumTriangles() << std::endl;
-    // Eigen::Matrix4f initTransf = Eigen::MatrixXf::Identity(4,4);
-    // icf.estimate(initTransf);
 
 
     /*
@@ -195,26 +171,6 @@ int main()
         }
     }
 
-
-    // Output results.
-    std::cout << "Model instances found: " << matTransform.size() << std::endl;
-    for (std::size_t i = 0; i < matTransform.size(); ++i) {
-        std::cout << "\n  Instance " << i + 1 << ":" << std::endl;
-        std::cout << "      Correspondences belonging to this instance: "
-                  << clusteredCorrs[i].size() << std::endl;
-
-        // Print the transformation matrix.
-
-        printf("\n");
-        printf("          | %6.3f %6.3f %6.3f %6.3f | \n", matTransform[i](0,0),
-               matTransform[i](0,1), matTransform[i](0,2), matTransform[i](0,3));
-        printf("          | %6.3f %6.3f %6.3f %6.3f | \n", matTransform[i](1,0),
-               matTransform[i](1,1), matTransform[i](1,2), matTransform[i](1,3));
-        printf("          | %6.3f %6.3f %6.3f %6.3f | \n", matTransform[i](2,0),
-               matTransform[i](2,1), matTransform[i](2,2), matTransform[i](2,3));
-        printf("          | %6.3f %6.3f %6.3f %6.3f | \n", matTransform[i](3,0),
-               matTransform[i](3,1), matTransform[i](3,2), matTransform[i](3,3));
-    }
 
     // Visualization.
     pcl::visualization::PCLVisualizer viewer("Correspondence Grouping");
@@ -297,7 +253,6 @@ int main()
     extracter.filter(*cloudPlane);
 
     */
-
 
     std::cout << "Hello World!" << std::endl;
     return 0;
