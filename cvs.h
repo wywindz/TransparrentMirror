@@ -42,6 +42,37 @@ private:
 // which have smaller edge number than the threshold.
 const std::vector<CVSFeature> refineCVSFeatureList(const std::vector<CVSFeature> & cvsFeatureList);
 
+class Edge
+{
+public:
+    Eigen::Vector3f point;
+    Eigen::Vector3f orientVector;
+};
+
+class EdgeDetector
+{
+public:
+    EdgeDetector();
+    ~EdgeDetector();
+
+    // typedefs
+    typedef pcl::PointCloud<pcl::PointXYZ> PointCloud;
+    typedef boost::shared_ptr<const PointCloud> PointCloudConstPtr;
+
+    void setInputCloud(const PointCloudConstPtr & ptrPointCloud);
+    void setRadius(float radius);
+    void setKPoints(std::size_t kPoints);
+    void compute(std::vector<Edge> & edgeList);
+
+    float getRadius();
+    std::size_t getKPoints();
+
+private:
+    PointCloudConstPtr inputCloud;
+    float radiusNeighbor;
+    float numNeighborPoints;
+};
+
 class CVSEstimation
 {
 public:
@@ -51,7 +82,6 @@ public:
     // typedefs
     typedef pcl::PointCloud<pcl::PointXYZ> PointCloud;
     typedef boost::shared_ptr<const PointCloud> PointCloudConstPtr;
-
 
     void setInputCloud(const PointCloudConstPtr & ptrPointCloud);
     void setRadius(float radius);
