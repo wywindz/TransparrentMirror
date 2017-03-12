@@ -77,8 +77,8 @@ void EdgeDetector::compute(std::vector<Edge> & edgeList)
 {
     pcl::octree::OctreePointCloudSearch<pcl::PointXYZ> octree(0.01);
     octree.setInputCloud(inputCloud);
-    for (std::size_t i = 0; i < inputCloud->size(); ++i) {
-        const pcl::PointXYZ & point = (*inputCloud)[i];
+    for (std::size_t iPoint = 0; iPoint < inputCloud->size(); ++iPoint) {
+        const pcl::PointXYZ & point = (*inputCloud)[iPoint];
         // Search 'K' points around the 'point'.
         std::vector<int> indices;
         std::vector<float> distances;
@@ -87,18 +87,18 @@ void EdgeDetector::compute(std::vector<Edge> & edgeList)
         if (indices.size()) {
             // Calculate the center location of the neighborhood.
             Eigen::Vector3f center;
-            for (std::size_t j = 0; j < indices.size(); ++j) {
-                Eigen::Vector3f pointQ = Eigen::Vector3f((*inputCloud)[indices[j]].x,
-                        (*inputCloud)[indices[j]].y, (*inputCloud)[indices[j]].z);
+            for (std::size_t iNeighbor = 0; iNeighbor < indices.size(); ++iNeighbor) {
+                Eigen::Vector3f pointQ = Eigen::Vector3f((*inputCloud)[indices[iNeighbor]].x,
+                        (*inputCloud)[indices[iNeighbor]].y, (*inputCloud)[indices[iNeighbor]].z);
                 center += pointQ;
             }
             center /= indices.size();
 
             // Calculate correlation matrix.
             Eigen::Matrix3f matCorrelation;
-            for (std::size_t j = 0; j < indices.size(); ++j) {
-                Eigen::Vector3f pointQ = Eigen::Vector3f((*inputCloud)[indices[j]].x,
-                        (*inputCloud)[indices[j]].y, (*inputCloud)[indices[j]].z);
+            for (std::size_t iNeighbor = 0; iNeighbor < indices.size(); ++iNeighbor) {
+                Eigen::Vector3f pointQ = Eigen::Vector3f((*inputCloud)[indices[iNeighbor]].x,
+                        (*inputCloud)[indices[iNeighbor]].y, (*inputCloud)[indices[iNeighbor]].z);
                 Eigen::Vector3f vectCQ = pointQ - center;
                 matCorrelation += vectCQ * Eigen::Transpose<Eigen::Vector3f>(vectCQ);
             }
@@ -111,6 +111,35 @@ void EdgeDetector::compute(std::vector<Edge> & edgeList)
             eigenVectors[0] = eigenSolver.eigenvectors().col(0).real();
             eigenVectors[1] = eigenSolver.eigenvectors().col(1).real();
             eigenVectors[2] = eigenSolver.eigenvectors().col(2).real();
+
+            // Sort the eigen values.
+            std::vector<std::size_t> orderIndices(3);
+            std::size_t idxN = 0;
+            std::generate(eigenValues.data(), eigenValues.data()+eigenValues.size(), [&]{ return idxN++; });
+            std::sort(orderIndices.begin(), orderIndices.end(),
+                      [&](int idx_1, int idx_2){ return eigenValues[idx_1] < eigenValues[idx_2]; });
+            float lambda_0 = eigenValues[orderIndices[0]];
+            float lambda_1 = eigenValues[orderIndices[1]];
+            float lambda_2 = eigenValues[orderIndices[2]];
+            Eigen::Vector3f eigVector_0 = eigenVectors[orderIndices[0]];
+            Eigen::Vector3f eigVector_1 = eigenVectors[orderIndices[1]];
+            Eigen::Vector3f eigVector_2 = eigenVectors[orderIndices[2]];
+
+            // Calculate penalty function.
+            Eigen::Vector3f omega = std::max(lambda_1-lambda_0, std::abs(lambda_2-lambda_1-lambda_0))
+                    / lambda_2 * eigVector_2;
+            // Calculate weight.
+            std::vector<std::vector<std::size_t> > edgePair(indices.size());
+            std::vector<float> edgeWeights(indices.size());
+            for (std::size_t iWeight = 0; iWeight < indices.size(); ++iWeight) {
+                edgePair[iWeight] = std::vector<std::size_t>(2);
+                // edgePair[iWeight][0] = iPoint;
+                edgePair[iWeight][1] = indices[iWeight];
+                // edgeWeights[iWeight] =
+
+
+            }
+            // ToDo: The index of the corners need to be stored.
         }
 
         // ToDo: Detect the edges.
