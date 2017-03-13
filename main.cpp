@@ -9,51 +9,53 @@
 #include <pcl/visualization/cloud_viewer.h>
 
 #include "cvs.h"
+#include "cvs_estimation.h"
 
 int main()
 {
+
     //
     // Specify CVSFeature(s) in the reference model.
-    std::vector<RADI::CVSFeature> cvsFeatures(8);
+    std::vector<radi::CVSFeature> cvsFeatures(8);
     Eigen::Vector3f xAxis(1.0, 0.0, 0.0);
     Eigen::Vector3f yAxis(0.0, 1.0, 0.0);
     Eigen::Vector3f zAxis(0.0, 0.0, 1.0);
-    cvsFeatures[0] = RADI::CVSFeature(pcl::PointXYZ(1.0, 1.0, 1.0));
+    cvsFeatures[0] = radi::CVSFeature(pcl::PointXYZ(1.0, 1.0, 1.0));
     cvsFeatures[0].appendVector(-yAxis);
     cvsFeatures[0].appendVector(-zAxis);
     cvsFeatures[0].appendVector(-xAxis);
 
-    cvsFeatures[1] = RADI::CVSFeature(pcl::PointXYZ(1.0, 1.0, -1.0));
+    cvsFeatures[1] = radi::CVSFeature(pcl::PointXYZ(1.0, 1.0, -1.0));
     cvsFeatures[1].appendVector(-yAxis);
     cvsFeatures[1].appendVector(-xAxis);
     cvsFeatures[1].appendVector(zAxis);
 
-    cvsFeatures[2] = RADI::CVSFeature(pcl::PointXYZ(1.0, -1.0, 1.0));
+    cvsFeatures[2] = radi::CVSFeature(pcl::PointXYZ(1.0, -1.0, 1.0));
     cvsFeatures[2].appendVector(-yAxis);
     cvsFeatures[2].appendVector(xAxis);
     cvsFeatures[2].appendVector(-zAxis);
 
-    cvsFeatures[3] = RADI::CVSFeature(pcl::PointXYZ(1.0, -1.0, -1.0));
+    cvsFeatures[3] = radi::CVSFeature(pcl::PointXYZ(1.0, -1.0, -1.0));
     cvsFeatures[3].appendVector(-yAxis);
     cvsFeatures[3].appendVector(xAxis);
     cvsFeatures[3].appendVector(zAxis);
 
-    cvsFeatures[4] = RADI::CVSFeature(pcl::PointXYZ(-1.0, 1.0, 1.0));
+    cvsFeatures[4] = radi::CVSFeature(pcl::PointXYZ(-1.0, 1.0, 1.0));
     cvsFeatures[4].appendVector(yAxis);
     cvsFeatures[4].appendVector(-xAxis);
     cvsFeatures[4].appendVector(-zAxis);
 
-    cvsFeatures[5] = RADI::CVSFeature(pcl::PointXYZ(-1.0, 1.0, -1.0));
+    cvsFeatures[5] = radi::CVSFeature(pcl::PointXYZ(-1.0, 1.0, -1.0));
     cvsFeatures[5].appendVector(yAxis);
     cvsFeatures[5].appendVector(-xAxis);
     cvsFeatures[5].appendVector(zAxis);
 
-    cvsFeatures[6] = RADI::CVSFeature(pcl::PointXYZ(-1.0, -1.0, 1.0));
+    cvsFeatures[6] = radi::CVSFeature(pcl::PointXYZ(-1.0, -1.0, 1.0));
     cvsFeatures[6].appendVector(xAxis);
     cvsFeatures[6].appendVector(yAxis);
     cvsFeatures[6].appendVector(-zAxis);
 
-    cvsFeatures[7] = RADI::CVSFeature(pcl::PointXYZ(-1.0, -1.0, -1.0));
+    cvsFeatures[7] = radi::CVSFeature(pcl::PointXYZ(-1.0, -1.0, -1.0));
     cvsFeatures[7].appendVector(xAxis);
     cvsFeatures[7].appendVector(yAxis);
     cvsFeatures[7].appendVector(zAxis);
@@ -86,13 +88,13 @@ int main()
     pcl::PointCloud<pcl::PointXYZ>::Ptr sceneDownSampled(new pcl::PointCloud<pcl::PointXYZ>());
     pcl::VoxelGrid<pcl::PointXYZ> voxGrid;
     voxGrid.setInputCloud(sceneFiltered);
-    voxGrid.setLeafSize(0.05f, 0.05f, 0.05f);
+    voxGrid.setLeafSize(0.01f, 0.01f, 0.01f);
     voxGrid.filter(*sceneDownSampled);
 
     std::cout << "Number of points in the pcd file: " << sceneRaw->size() << std::endl;
     std::cout << "Number of points after filtering and downsampling: " << sceneDownSampled->size() << std::endl;
 
-    RADI::CVSEstimation cvsEstimation;
+    radi::CVSEstimation cvsEstimation;
     cvsEstimation.setInputCloud(sceneDownSampled);
     cvsEstimation.esimate();
 

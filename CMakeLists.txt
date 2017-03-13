@@ -20,7 +20,7 @@ link_directories(${QT_LIBRARIES})
 # link_directories(${Qt5Core_LIBRARIES})
 # add_definitions(${Qt5Core_DEFINITIONS})
 
-set(SRC_LIST main.cpp cvs.cpp)
+set(SRC_LIST main.cpp cvs.cpp edge_detector.cpp cvs_estimation.cpp)
 
 add_executable(transparent_mirror ${SRC_LIST})
 target_link_libraries(transparent_mirror ${PCL_LIBRARIES})

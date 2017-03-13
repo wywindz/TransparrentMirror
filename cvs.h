@@ -10,97 +10,45 @@
 #include <pcl/point_cloud.h>
 #include <Eigen/Core>
 
-namespace RADI {
+namespace radi {
 
-class CVSFeature
-{
-public:
-    CVSFeature(pcl::PointXYZ cornerPosition = pcl::PointXYZ());
-    CVSFeature(pcl::PointXYZ cornerPosition, std::vector<Eigen::Vector3f> vectors);
-    ~CVSFeature();
+  class CVSFeature
+  {
+    public:
+      CVSFeature (pcl::PointXYZ corner = pcl::PointXYZ());
+      CVSFeature (pcl::PointXYZ corner, std::vector<Eigen::Vector3f> vectors);
+      ~CVSFeature ();
 
-    template<typename PointType>
-    void setCorner(PointType cornerPosition)
-    {
-        corner = pcl::PointXYZ(cornerPosition[0], cornerPosition[1], cornerPosition[2]);
-    }
+      template<typename PointType> void
+      setCorner (PointType corner)
+      {
+          corner_ = pcl::PointXYZ(corner[0], corner[1], corner[2]);
+      }
 
-    const pcl::PointXYZ getCorner();
+      const pcl::PointXYZ
+      getCorner();
 
-    void appendVector(const Eigen::Vector3f & vector);
-    const std::vector<Eigen::Vector3f> & getVectors() const;
+      void
+      appendVector (const Eigen::Vector3f & vector);
 
-    std::vector<float> getIncludedAngles();
-    std::size_t getNumEdges();
+      const std::vector<Eigen::Vector3f> &
+      getVectors () const;
 
-private:
-    pcl::PointXYZ corner;
-    std::vector<Eigen::Vector3f> edgeVectors;
-};
+      std::vector<float>
+      getIncludedAngles ();
 
-// Refine CVS feature list, for example, remove extra features which are two close with each other or remove features
-// which have smaller edge number than the threshold.
-const std::vector<CVSFeature> refineCVSFeatureList(const std::vector<CVSFeature> & cvsFeatureList);
+      std::size_t
+      getNumEdges ();
 
-class Edge
-{
-public:
-    Eigen::Vector3f point;
-    Eigen::Vector3f orientVector;
-};
+    private:
+      pcl::PointXYZ corner_;
+      std::vector<Eigen::Vector3f> edge_vectors_;
+  };
 
-class EdgeDetector
-{
-public:
-    EdgeDetector();
-    ~EdgeDetector();
+  // Refine CVS feature list, for example, remove extra features which are two close with each other or remove features
+  // which have smaller edge number than the threshold.
+  const std::vector<CVSFeature> refineCVSFeatureList(const std::vector<CVSFeature> & cvsFeatureList);
 
-    // typedefs
-    typedef pcl::PointCloud<pcl::PointXYZ> PointCloud;
-    typedef boost::shared_ptr<const PointCloud> PointCloudConstPtr;
-
-    void setInputCloud(const PointCloudConstPtr & ptrPointCloud);
-    void setRadius(float radius);
-    void setKPoints(std::size_t kPoints);
-    void compute(std::vector<Edge> & edgeList);
-
-    float getRadius();
-    std::size_t getKPoints();
-
-private:
-    PointCloudConstPtr inputCloud;
-    float radiusNeighbor;
-    float numNeighborPoints;
-};
-
-class CVSEstimation
-{
-public:
-    CVSEstimation();
-    ~CVSEstimation();
-
-    // typedefs
-    typedef pcl::PointCloud<pcl::PointXYZ> PointCloud;
-    typedef boost::shared_ptr<const PointCloud> PointCloudConstPtr;
-
-    void setInputCloud(const PointCloudConstPtr & ptrPointCloud);
-    void setRadius(float radius);
-    void setMinDistance(float distance);
-    void setMinNumEdges(std::size_t numEdges);
-    std::vector<CVSFeature> esimate();
-
-    float getRadius();
-    float getMinDistance();
-    std::size_t getMinNumEdges();
-
-private:
-    // pcl::PointCloud<pcl::PointXYZ>::ConstPtr inputCloud;
-    PointCloudConstPtr inputCloud;
-    float radiusNeighbor;
-    float minDistance;
-    float minNumEdges;
-};
-
-} // namespace RADI
+} // namespace radi
 
 #endif // MIRROR_CVS_H_
