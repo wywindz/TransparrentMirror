@@ -34,13 +34,17 @@ namespace radi {
 
       void
       setRadius (float radius);
+
       void
       setK (std::size_t k);
+
+      // Obtain the indices of the points which are in an edge.
       void
-      compute (std::vector<Edge> & edge_list);
+      compute (std::vector<int> & edge_point_indices);
 
       float
       getRadius ();
+
       std::size_t
       getK ();
 

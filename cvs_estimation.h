@@ -12,8 +12,8 @@
 
 #include "cvs.h"
 
-namespace radi {
-
+namespace radi
+{
   class CVSEstimation
   {
     public:
@@ -36,8 +36,7 @@ namespace radi {
       void
       setNumEdges (std::size_t numEdges);
 
-      std::vector<CVSFeature>
-      esimate ();
+      void esimate(std::vector<CVSFeature> & cvs_feature_list);
 
       float
       getRadius ();

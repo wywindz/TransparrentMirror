@@ -13,7 +13,8 @@
 
 #include "edge_detector.h"
 
-namespace radi {
+namespace radi
+{
 
 EdgeDetector::EdgeDetector() : radius_(0.5), k_(20)
 { }
@@ -40,7 +41,7 @@ EdgeDetector::setK (std::size_t k)
 }
 
 void
-EdgeDetector::compute (std::vector<Edge> & edge_list)
+EdgeDetector::compute (std::vector<int> & edge_point_indices)
 {
   std::vector<float> mu_list (point_cloud_->size ());   // Average distance from the point to its neighbors.
   std::vector<float> curvature_list (point_cloud_->size ());   // Curvature at each point.
@@ -131,7 +132,6 @@ EdgeDetector::compute (std::vector<Edge> & edge_list)
   }
 
   // Detect edge.
-  std::vector<int> edge_point_indices;
   float tau = 0.5;
   float alpha = 0.5;
   for (std::size_t idx_point = 0; idx_point < point_cloud_->size (); ++idx_point)
@@ -167,44 +167,12 @@ EdgeDetector::compute (std::vector<Edge> & edge_list)
                 [&queue_weights](int idx_1, int idx_2){ return queue_weights[idx_1] < queue_weights[idx_2]; });
       edge_point_indices.push_back(queue[order_edge[0]][0]);
       edge_point_indices.push_back(queue[order_edge[0]][1]);
-      std::cout << queue[order_edge[0]][0] << " " << queue[order_edge[0]][1] << std::endl;
     }
   }
 
+  // Remove duplicate indices.
   std::set<int> edge_point_indices_set(edge_point_indices.begin(), edge_point_indices.end());
-  std::vector<int> edge_point_indices_no_duplicate(edge_point_indices_set.begin(), edge_point_indices_set.end());
-
-  std::cout << "Number of edge points: " << edge_point_indices_no_duplicate.size() << std::endl;
-
-  pcl::PointCloud<pcl::PointXYZ>::Ptr output (new pcl::PointCloud<pcl::PointXYZ> ());
-  pcl::ExtractIndices<pcl::PointXYZ> extractor;
-  extractor.setInputCloud(point_cloud_);
-  extractor.setIndices (boost::make_shared<std::vector<int> > (edge_point_indices_no_duplicate));
-  extractor.filter(*output);
-
-  // Visualization.
-  pcl::visualization::PCLVisualizer viewer("Scene");
-  viewer.addPointCloud(output, "edge");
-  // viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "edge");
-  while (!viewer.wasStopped()) {
-      viewer.spinOnce();
-  }
-
-  // Calculate weight.
-  // std::vector<std::vector<std::size_t> > edge_pair(neighbor_indices.size());
-  // std::vector<float> edge_weights(neighbor_indices.size());
-  // for (std::size_t idx_weight = 0; idx_weight < neighbor_indices.size(); ++idx_weight)
-  // {
-  //   edge_pair[idx_weight] = std::vector<std::size_t>(2);
-  //   // edgePair[iWeight][0] = iPoint;
-  //   edge_pair[idx_weight][1] = neighbor_indices[idx_weight];
-  //   // edgeWeights[iWeight] =
-
-
-  // }
-    // ToDo: The index of the corners need to be stored.
-
-  // ToDo: Detect the edges.
+  edge_point_indices = std::vector<int>(edge_point_indices_set.begin(), edge_point_indices_set.end());
 }
 
 } // namespace radi

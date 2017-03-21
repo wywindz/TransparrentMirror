@@ -10,8 +10,8 @@
 #include <pcl/point_cloud.h>
 #include <Eigen/Core>
 
-namespace radi {
-
+namespace radi
+{
   class CVSFeature
   {
     public:
@@ -22,7 +22,7 @@ namespace radi {
       template<typename PointType> void
       setCorner (PointType corner)
       {
-          corner_ = pcl::PointXYZ(corner[0], corner[1], corner[2]);
+        corner_ = pcl::PointXYZ(corner.x, corner.y, corner.z);
       }
 
       const pcl::PointXYZ
