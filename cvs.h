@@ -34,6 +34,9 @@ namespace radi
       void
       appendVector (const Eigen::Vector3f & vector);
 
+      void
+      compute ();
+
       const Eigen::Vector3f
       getVector (std::size_t index) const;
 
@@ -44,16 +47,26 @@ namespace radi
       getIncludedAngles ();
 
       std::size_t
-      getNumEdges ();
+      getNumEdges () const;
 
     private:
       pcl::PointXYZ corner_;
       std::vector<Eigen::Vector3f> edge_vectors_;
+      std::vector<float> angle_list_;
+      std::vector<std::vector<int> > indices_list_;
   };
 
   // Refine CVS feature list, for example, remove extra features which are two close with each other or remove features
   // which have smaller edge number than the threshold.
-  const std::vector<CVSFeature> refineCVSFeatureList(const std::vector<CVSFeature> & cvsFeatureList);
+  const std::vector<CVSFeature>
+  refineCVSFeatureList (const std::vector<CVSFeature> & cvsFeatureList);
+
+  void
+  transformCVSFeature (const Eigen::Matrix4f & mat_transf,
+          const CVSFeature & source_feature, CVSFeature & target_feature);
+
+  bool
+  isInList(int index, std::vector<int> index_list);
 
 } // namespace radi
 

@@ -49,6 +49,9 @@ namespace radi
       const std::vector<CVSFeature> * scene_features_;
       float threshold_;
 
+      bool
+      pairFeatures (const CVSFeature & scene_feature, const CVSFeature & model_feature);
+
       void
       pairFeatures (const CVSFeature & scene_feature,
               const CVSFeature & model_feature, std::vector<std::vector<pcl::Correspondence> > & vector_pairs);

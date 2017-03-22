@@ -75,14 +75,49 @@ namespace radi
           transf_candidates.push_back(mat_transf);
         }
 
+        // ToDo:
         // Detect if the transformations can be applied to other features and refine them.
         for (std::size_t idx_refine = 0; idx_refine < transf_candidates.size(); ++idx_refine)
         {
+          if (scene_features_->size() > 1)
+          {
+            for (std::size_t idx_feature = 0; idx_feature < scene_features_->size(); ++idx_feature)
+            {
+              CVSFeature feature_transformed;
+              transformCVSFeature(transf_candidates[idx_refine], (*scene_features_)[idx_feature], feature_transformed);
 
+              bool found_pair = false;
+              for (std::size_t idx_feature_model = 0; idx_feature_model < model_features_->size(); ++idx_feature_model)
+              {
+                if (pairFeatures(feature_transformed, (*model_features_)[idx_feature_model]))
+                {
+                  found_pair = true;
+                  break;
+                }
+              }
+
+              if (!found_pair)
+              {
+                // ToDo:
+                // Cannot find a pair. Remove the corresponding transformation matrix.
+              }
+            }
+          }
         }
-
       }
     }
+  }
+
+  bool
+  CVSCorrespGroup::pairFeatures (const CVSFeature & scene_feature, const CVSFeature & model_feature)
+  {
+    std::vector<std::vector<pcl::Correspondence> > vector_pairs;
+    pairFeatures(scene_feature, model_feature, vector_pairs);
+
+    if (vector_pairs.empty())
+      return (false);
+    else
+      return (true);
   }
 
   void
