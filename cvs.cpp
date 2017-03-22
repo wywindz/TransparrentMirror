@@ -26,10 +26,22 @@ namespace radi
     return (corner_);
   }
 
+  const Eigen::Vector3f
+  CVSFeature::getCornerPosition () const
+  {
+    return (Eigen::Vector3f(corner_.x, corner_.y, corner_.z));
+  }
+
   void
   CVSFeature::appendVector (const Eigen::Vector3f &vector)
   {
     edge_vectors_.push_back(vector);
+  }
+
+  const Eigen::Vector3f
+  CVSFeature::getVector (std::size_t index) const
+  {
+    return (edge_vectors_[index]);
   }
 
   const std::vector<Eigen::Vector3f> &

@@ -19,16 +19,17 @@ namespace radi
       ~Mesh ();
 
       void
-      loadModel(const std::string & filePath);
+      loadModel (const std::string & filePath);
 
       inline std::size_t
-      getNumTriangles () const { return triangles.size(); }
+      getNumTriangles () const { return triangles_.size(); }
 
       const std::vector<Eigen::Vector3f> &
       getTriangle (std::size_t index) const;
 
     private:
-      std::vector<std::vector<Eigen::Vector3f> > triangles;
+      std::vector<std::vector<Eigen::Vector3f> > triangles_;
+
   }; // class Mesh
 
 } // namespace radi

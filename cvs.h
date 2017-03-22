@@ -28,8 +28,14 @@ namespace radi
       const pcl::PointXYZ
       getCorner();
 
+      const Eigen::Vector3f
+      getCornerPosition() const;
+
       void
       appendVector (const Eigen::Vector3f & vector);
+
+      const Eigen::Vector3f
+      getVector (std::size_t index) const;
 
       const std::vector<Eigen::Vector3f> &
       getVectors () const;
