@@ -47,46 +47,58 @@ namespace radi
     else
       nCountTotal = edge_vectors_.size();
 
-    int nCount = 0;
-    int index_start = 0;
-    int index_previous = -1;
-    std::vector<int> index_accumulator;
-    while (nCount < nCountTotal)
+    // ToDo: Calculate the centroid of the vectors.
+    Eigen::Vector3f center_vector = Eigen::Matrix3Xf::Zero(3,1);
+    for (std::size_t i = 0; i < edge_vectors_.size(); ++i)
     {
-      Eigen::Vector3f vect_origin = edge_vectors_[index_start];
-      std::vector<int> pair_indices(2);
-      pair_indices[0] = index_start;
-      float included_angle = 3.14;
-      for (std::size_t idxI = 0; idxI < this->edge_vectors_.size(); ++idxI)
+      center_vector += edge_vectors_[i];
+    }
+    center_vector /= std::sqrt(center_vector.dot(center_vector));
+
+    std::vector<Eigen::Vector3f> normal_list(edge_vectors_.size());
+    for (std::size_t i = 0; i < edge_vectors_.size(); ++i)
+    {
+      normal_list[i] = edge_vectors_[i].cross(center_vector);
+      normal_list[i] /= std::sqrt(normal_list[i].dot(normal_list[i]));
+    }
+
+    std::vector<float> angle_plane_list(edge_vectors_.size());
+    angle_plane_list[0] = 0.0;
+    for (std::size_t i = 1; i < edge_vectors_.size(); ++i)
+    {
+      float vector_included_angle = std::acos(normal_list[0].dot(normal_list[i]));
+      if ((normal_list[0].cross(normal_list[i])).dot(center_vector) > 0.0)
       {
-        // if (idxI != index_previous)
-        if (!isInList(idxI, index_accumulator))
-        {
-          float angle = std::acos(vect_origin.dot(edge_vectors_[idxI]));
-          if (angle < included_angle)
-          {
-            included_angle = angle;
-            pair_indices[1] = idxI;
-          }
-        }
+        angle_plane_list[i] = 2*3.1415926 - vector_included_angle;
       }
-
-      nCount++;
-      index_previous = index_start;
-      index_start = pair_indices[1];
-
-      angle_list_.push_back(included_angle);
-      indices_list_.push_back(pair_indices);
-
-      if ((nCount != 0) && (nCount == nCountTotal-1))
+      else
       {
-        nCount++;
-        Eigen::Vector3f vect_origin = edge_vectors_[index_start];
-        std::vector<int> pair_indices(2);
-        pair_indices[0] = index_start;
-        pair_indices[1] = indices_list_[0][0];
-        angle_list_.push_back(std::acos(vect_origin.dot(edge_vectors_[pair_indices[1]])));
+        angle_plane_list[i] = vector_included_angle;
       }
+    }
+
+    // Sort.
+    std::vector<std::size_t> order_indices(angle_plane_list.size());
+    std::iota(order_indices.begin (), order_indices.end (), 0);
+    std::sort(order_indices.begin(), order_indices.end(),
+              [&angle_plane_list](int idx_1, int idx_2){ return angle_plane_list[idx_1] < angle_plane_list[idx_2]; });
+
+    for (std::size_t i = 0; i < order_indices.size()-1; ++i)
+    {
+      std::vector<int> pair_indicies(2);
+      pair_indicies[0] = order_indices[i];
+      pair_indicies[1] = order_indices[i+1];
+      angle_list_.push_back(std::acos(edge_vectors_[pair_indicies[0]].dot(edge_vectors_[pair_indicies[1]])));
+      indices_list_.push_back(pair_indicies);
+    }
+
+    if (nCountTotal > 1)
+    {
+      std::vector<int> pair_indicies(2);
+      pair_indicies[0] = order_indices[nCountTotal-1];
+      pair_indicies[1] = order_indices[0];
+      angle_list_.push_back(std::acos(edge_vectors_[pair_indicies[0]].dot(edge_vectors_[pair_indicies[1]])));
+      indices_list_.push_back(pair_indicies);
     }
   }
 

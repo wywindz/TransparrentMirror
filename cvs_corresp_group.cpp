@@ -112,7 +112,7 @@ namespace radi
   CVSCorrespGroup::pairFeatures (const CVSFeature & scene_feature, const CVSFeature & model_feature)
   {
     std::vector<std::vector<pcl::Correspondence> > vector_pairs;
-    pairFeatures(scene_feature, model_feature, vector_pairs);
+    pairFeatures (scene_feature, model_feature, vector_pairs);
 
     if (vector_pairs.empty())
       return (false);
@@ -124,6 +124,10 @@ namespace radi
   CVSCorrespGroup::pairFeatures (const CVSFeature & scene_feature,
           const CVSFeature & model_feature, std::vector<std::vector<pcl::Correspondence> > & vector_pairs)
   {
+    for (std::size_t i = 0; i < scene_feature.getNumEdges(); ++i)
+    {
+
+    }
 
   }
 
