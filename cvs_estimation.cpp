@@ -126,6 +126,11 @@ namespace radi
         }
       }
 
+      cvs_feature.compute();
+
+      const std::vector<float> & angles = cvs_feature.getIncludedAngles();
+      std::cout << angles[0] << "  " << angles[1] << "  " << angles[2] << std::endl;
+
       std::cout << "Number of edges: " << cvs_feature.getNumEdges() << std::endl;
 
       cvs_feature_list.push_back(cvs_feature);

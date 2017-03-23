@@ -47,7 +47,6 @@ namespace radi
     else
       nCountTotal = edge_vectors_.size();
 
-    // ToDo: Calculate the centroid of the vectors.
     Eigen::Vector3f center_vector = Eigen::Matrix3Xf::Zero(3,1);
     for (std::size_t i = 0; i < edge_vectors_.size(); ++i)
     {
@@ -114,10 +113,10 @@ namespace radi
     return (edge_vectors_);
   }
 
-  std::vector<float>
-  CVSFeature::getIncludedAngles ()
+  const std::vector<float> &
+  CVSFeature::getIncludedAngles() const
   {
-    // ToDO: Calculate the included angles between each pair of edge vectors.
+    return (angle_list_);
   }
 
   std::size_t

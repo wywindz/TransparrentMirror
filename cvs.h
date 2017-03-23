@@ -43,8 +43,8 @@ namespace radi
       const std::vector<Eigen::Vector3f> &
       getVectors () const;
 
-      std::vector<float>
-      getIncludedAngles ();
+      const std::vector<float> &
+      getIncludedAngles () const;
 
       std::size_t
       getNumEdges () const;

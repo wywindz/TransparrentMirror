@@ -48,6 +48,8 @@ namespace radi
         std::vector<std::vector<pcl::Correspondence> > vector_pairs;
         pairFeatures((*scene_features_)[idx_scene], (*model_features_)[idx_model], vector_pairs);
 
+        std::cout << "Vector pairs: " << vector_pairs.size() << std::endl;
+
         // Calcualte the transformation matrices.
         std::vector<Eigen::Matrix4f> transf_candidates;
         for (std::size_t idx_pair = 0; idx_pair < vector_pairs.size (); ++idx_pair)
@@ -75,8 +77,12 @@ namespace radi
           transf_candidates.push_back(mat_transf);
         }
 
+        std::cout << "Number of transformation matrices: " << transf_candidates.size() << std::endl;
+        transf_list = transf_candidates;
+
         // ToDo:
         // Detect if the transformations can be applied to other features and refine them.
+        /*
         for (std::size_t idx_refine = 0; idx_refine < transf_candidates.size(); ++idx_refine)
         {
           if (scene_features_->size() > 1)
@@ -104,6 +110,7 @@ namespace radi
             }
           }
         }
+        */
       }
     }
   }
@@ -124,9 +131,57 @@ namespace radi
   CVSCorrespGroup::pairFeatures (const CVSFeature & scene_feature,
           const CVSFeature & model_feature, std::vector<std::vector<pcl::Correspondence> > & vector_pairs)
   {
-    for (std::size_t i = 0; i < scene_feature.getNumEdges(); ++i)
-    {
+    const std::vector<float> & angle_list_scene = scene_feature.getIncludedAngles();
+    const std::vector<float> & angle_list_model = model_feature.getIncludedAngles();
 
+    // Combine and find the pair.
+    if (angle_list_scene.size() == angle_list_model.size())
+    {
+      // fully pair.
+      int start_model;
+      for (std::size_t j = 0; j < angle_list_model.size(); ++j)
+      {
+        // Find the start point.
+        if (std::abs(angle_list_scene[0]-angle_list_model[j]) < 0.3)
+        {
+          start_model = j;
+          // Start to match the angles.
+          bool hasMatched = true;
+          for (std::size_t k = 0; k < angle_list_model.size(); ++k)
+          {
+            if (std::abs(angle_list_scene[k]-angle_list_model[(start_model+k)%angle_list_model.size()]) > 0.3)
+            {
+              hasMatched = false;
+              break;
+            }
+          }
+
+          if (hasMatched)
+          {
+            std::vector<pcl::Correspondence> pair_indices_list;
+            for (std::size_t k = 0; k < angle_list_model.size(); ++k)
+            {
+              pcl::Correspondence corresp;
+              corresp.index_query = k;
+              corresp.index_match = (start_model+k)%angle_list_model.size();
+              pair_indices_list.push_back(corresp);
+            }
+
+            std::cout << "Has matched." << std::endl;
+
+            vector_pairs.push_back(pair_indices_list);
+          }
+        }
+      }
+    }
+    else if (angle_list_scene.size() > angle_list_model.size())
+    {
+      // This is impossible for a pair of correspondence features.
+      vector_pairs = std::vector<std::vector<pcl::Correspondence> >();
+    }
+    else
+    {
+      // partially pair.
     }
 
   }

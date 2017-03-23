@@ -10,6 +10,7 @@
 
 #include "cvs.h"
 #include "cvs_estimation.h"
+#include "cvs_corresp_group.h"
 
 int main ()
 {
@@ -23,41 +24,52 @@ int main ()
   cvsFeatures[0].appendVector(-yAxis);
   cvsFeatures[0].appendVector(-zAxis);
   cvsFeatures[0].appendVector(-xAxis);
+  cvsFeatures[0].compute();
 
   cvsFeatures[1] = radi::CVSFeature(pcl::PointXYZ(1.0, 1.0, -1.0));
   cvsFeatures[1].appendVector(-yAxis);
   cvsFeatures[1].appendVector(-xAxis);
   cvsFeatures[1].appendVector(zAxis);
+  cvsFeatures[1].compute();
 
   cvsFeatures[2] = radi::CVSFeature(pcl::PointXYZ(1.0, -1.0, 1.0));
   cvsFeatures[2].appendVector(-yAxis);
   cvsFeatures[2].appendVector(xAxis);
   cvsFeatures[2].appendVector(-zAxis);
+  cvsFeatures[2].compute();
 
   cvsFeatures[3] = radi::CVSFeature(pcl::PointXYZ(1.0, -1.0, -1.0));
   cvsFeatures[3].appendVector(-yAxis);
   cvsFeatures[3].appendVector(xAxis);
   cvsFeatures[3].appendVector(zAxis);
+  cvsFeatures[3].compute();
 
   cvsFeatures[4] = radi::CVSFeature(pcl::PointXYZ(-1.0, 1.0, 1.0));
   cvsFeatures[4].appendVector(yAxis);
   cvsFeatures[4].appendVector(-xAxis);
   cvsFeatures[4].appendVector(-zAxis);
+  cvsFeatures[4].compute();
 
   cvsFeatures[5] = radi::CVSFeature(pcl::PointXYZ(-1.0, 1.0, -1.0));
   cvsFeatures[5].appendVector(yAxis);
   cvsFeatures[5].appendVector(-xAxis);
   cvsFeatures[5].appendVector(zAxis);
+  cvsFeatures[5].compute();
 
   cvsFeatures[6] = radi::CVSFeature(pcl::PointXYZ(-1.0, -1.0, 1.0));
   cvsFeatures[6].appendVector(xAxis);
   cvsFeatures[6].appendVector(yAxis);
   cvsFeatures[6].appendVector(-zAxis);
+  cvsFeatures[6].compute();
 
   cvsFeatures[7] = radi::CVSFeature(pcl::PointXYZ(-1.0, -1.0, -1.0));
   cvsFeatures[7].appendVector(xAxis);
   cvsFeatures[7].appendVector(yAxis);
   cvsFeatures[7].appendVector(zAxis);
+  cvsFeatures[7].compute();
+
+  const std::vector<float> & angles = cvsFeatures[7].getIncludedAngles();
+  std::cout << angles[0] << "  " << angles[1] << "  " << angles[2] << std::endl;
 
   //
   // Load pcd file.
@@ -100,6 +112,13 @@ int main ()
   cvsEstimation.esimate(cvs_feature_list);
 
   // Corresponce group.
+  radi::CVSCorrespGroup corresp_group;
+  corresp_group.setSceneFeatures(&cvs_feature_list);
+  corresp_group.setModelFeatures(&cvsFeatures);
+  std::vector<Eigen::Matrix4f> mat_transf_list;
+  corresp_group.recognize(mat_transf_list);
+
+  std::cout << mat_transf_list.size() << std::endl;
 
   // // Visualize corners.
   // pcl::visualization::PCLVisualizer viewer("Scene");
