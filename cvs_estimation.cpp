@@ -56,6 +56,8 @@ namespace radi
     // }
 
     std::cout << "Number of corner points: " << corners->size() << std::endl;
+    std::cout << "Position of corner point: " << corners->points[0].x
+                 << " " << corners->points[0].y << " " << corners->points[0].z << std::endl;
 
     // ToDo: May refine corners to reduce the computation, remove extra corners which are
     // too close with each other.

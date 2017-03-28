@@ -332,8 +332,11 @@ namespace radi
   float
   IterativeClosestFace::calObjectiveValue (const Eigen::Matrix4f & mat_transf)
   {
+    std::cout << "Matrix transf: \n" << mat_transf << std::endl;
     pcl::PointCloud<pcl::PointXYZ> transformed_scene;
-    pcl::transformPointCloud(*scene_point_cloud_, transformed_scene, mat_transf);
+    // pcl::transformPointCloud(*scene_point_cloud_, transformed_scene, mat_transf);
+    Eigen::Matrix4f inv_mat_transf = mat_transf.inverse ();
+    pcl::transformPointCloud(*scene_point_cloud_, transformed_scene, inv_mat_transf);
 
     float objective_value = 0.0;
     for (std::size_t i = 0; i < transformed_scene.points.size(); ++i)
