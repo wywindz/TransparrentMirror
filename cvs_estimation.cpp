@@ -5,12 +5,14 @@
 #include <pcl/keypoints/harris_3d.h>
 #include <pcl/filters/extract_indices.h>
 
+#include <pcl/visualization/pcl_visualizer.h>
+
 #include "cvs_estimation.h"
 #include "edge_detector.h"
 
 namespace radi
 {
-  CVSEstimation::CVSEstimation() : radius_(0.1), distance_(0.2), num_edges_(2)
+  CVSEstimation::CVSEstimation() : radius_(0.1), distance_(0.2), min_num_edges_(2)
   { }
 
   CVSEstimation::~CVSEstimation()
@@ -26,9 +28,9 @@ namespace radi
     radius_ = radius;
   }
 
-  void CVSEstimation::setNumEdges(std::size_t numEdges)
+  void CVSEstimation::setMinNumEdges(std::size_t min_num_edges)
   {
-    num_edges_ = numEdges;
+    min_num_edges_ = min_num_edges;
   }
 
   void CVSEstimation::esimate(std::vector<CVSFeature> & cvs_feature_list)
@@ -43,6 +45,18 @@ namespace radi
     corner_detector.setThreshold (1e-3);
     corner_detector.compute (*corners);
 
+    // // Visualize corners.
+    // pcl::visualization::PCLVisualizer viewer("Corners");
+    // pcl::visualization::PointCloudColorHandlerGenericField<pcl::PointXYZI> handler(corners, "intensity");
+    // viewer.addPointCloud(this->point_cloud_, "Scene Downsmapled");
+    // viewer.addPointCloud(corners, handler, "Corners");
+    // viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 7, "Corners");
+    // while (!viewer.wasStopped()) {
+    //     viewer.spinOnce();
+    // }
+
+    std::cout << "Number of corner points: " << corners->size() << std::endl;
+
     // ToDo: May refine corners to reduce the computation, remove extra corners which are
     // too close with each other.
 
@@ -52,12 +66,12 @@ namespace radi
     octree.addPointsFromInputCloud ();
     for (std::size_t idx_corner = 0; idx_corner < corners->size(); ++idx_corner)
     {
-      // Extract the neighborhoods of these corners, in which edge detection will be performed.
+      // Extract the neighborhood of the corner point, in which edge detection will be performed.
       pcl::PointXYZ corner ((*corners).points[idx_corner].x, (*corners).points[idx_corner].y,
               (*corners).points[idx_corner].z);
       std::vector<int> neighbor_indices;
       std::vector<float> neighbor_distances;
-      octree.radiusSearch (corner, 0.2, neighbor_indices, neighbor_distances);
+      octree.radiusSearch (corner, radius_, neighbor_indices, neighbor_distances);
 
       pcl::ExtractIndices<pcl::PointXYZ> extractor;
       extractor.setInputCloud (point_cloud_);
@@ -66,25 +80,26 @@ namespace radi
       extractor.setIndices (boost::make_shared<std::vector<int> > (neighbor_indices));
       extractor.filter (*neighborhood);
 
+      std::cout << "Number of points in the neighborhood of corner point: " << neighborhood->size() << std::endl;
+
       // Detect the edges in the neighborhood of the keypoint.
       std::vector<int> edge_point_indices;
       radi::EdgeDetector edge_detector;
       edge_detector.setInputCloud(neighborhood);
       edge_detector.compute(edge_point_indices);
 
-      // Classify the points.
+      // ToDo: Need to rectify the following algorithm to be more robust.
+      // Categorize the edge points into different clusters.
       Eigen::Vector3f pos_corner (corner.x, corner.y, corner.z);
       std::vector<std::vector<int> > edge_candidates;
+      // When encounter a new direction, add it into 'direction_references'.
       std::vector<Eigen::Vector3f> direction_references;
       for (std::size_t idx_edge = 0; idx_edge < edge_point_indices.size(); ++idx_edge)
       {
-        Eigen::Vector3f pos_edge_point ((*neighborhood).points[edge_point_indices[idx_edge]].x,
-                (*neighborhood).points[edge_point_indices[idx_edge]].y,
-                (*neighborhood).points[edge_point_indices[idx_edge]].z);
+        const pcl::PointXYZ & point_edge = (*neighborhood).points[edge_point_indices[idx_edge]];
+        Eigen::Vector3f pos_edge_point (point_edge.x, point_edge.y, point_edge.z);
         Eigen::Vector3f vect_direction = pos_edge_point - pos_corner;
         vect_direction /= std::sqrt(vect_direction.dot(vect_direction));
-
-        // std::cout << "Direction: " << vect_direction[0] << "  " << vect_direction[1] << "  " << vect_direction[2] << std::endl;
 
         if (edge_candidates.empty())
         {
@@ -120,20 +135,21 @@ namespace radi
       // Number of the points in one edge should be larger than 5.
       for (std::size_t idx_feature = 0; idx_feature < edge_candidates.size(); ++idx_feature)
       {
-        if (edge_candidates[idx_feature].size() >=5)
+        if (edge_candidates[idx_feature].size() >= 5)
         {
           cvs_feature.appendVector(direction_references[idx_feature]);
         }
       }
 
-      cvs_feature.compute();
-
-      const std::vector<float> & angles = cvs_feature.getIncludedAngles();
-      std::cout << angles[0] << "  " << angles[1] << "  " << angles[2] << std::endl;
-
       std::cout << "Number of edges: " << cvs_feature.getNumEdges() << std::endl;
+      if (cvs_feature.getNumEdges() >= min_num_edges_) {
+        cvs_feature.compute();
 
-      cvs_feature_list.push_back(cvs_feature);
+        // const std::vector<float> & angles = cvs_feature.getIncludedAngles();
+        // std::cout << angles[0] << "  " << angles[1] << "  " << angles[2] << std::endl;
+
+        cvs_feature_list.push_back(cvs_feature);
+      }
     }
   }
 
@@ -144,7 +160,7 @@ namespace radi
 
   std::size_t CVSEstimation::getMinNumEdges()
   {
-    return (num_edges_);
+    return (min_num_edges_);
   }
 
 } // namespace radi

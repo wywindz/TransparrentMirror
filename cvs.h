@@ -46,6 +46,9 @@ namespace radi
       const std::vector<float> &
       getIncludedAngles () const;
 
+      const std::vector<std::vector<int> > &
+      getIndexPairs() const;
+
       std::size_t
       getNumEdges () const;
 
@@ -53,7 +56,7 @@ namespace radi
       pcl::PointXYZ corner_;
       std::vector<Eigen::Vector3f> edge_vectors_;
       std::vector<float> angle_list_;
-      std::vector<std::vector<int> > indices_list_;
+      std::vector<std::vector<int> > indices_list_; // Index pair of edge vectors between which the included angle is calculated.
   };
 
   // Refine CVS feature list, for example, remove extra features which are two close with each other or remove features

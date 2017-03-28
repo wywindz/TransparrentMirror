@@ -119,6 +119,12 @@ namespace radi
     return (angle_list_);
   }
 
+  const std::vector<std::vector<int> > &
+  CVSFeature::getIndexPairs() const
+  {
+    return (indices_list_);
+  }
+
   std::size_t
   CVSFeature::getNumEdges() const
   {

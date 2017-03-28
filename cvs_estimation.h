@@ -34,7 +34,7 @@ namespace radi
       setDistance (float distance);
 
       void
-      setNumEdges (std::size_t numEdges);
+      setMinNumEdges (std::size_t min_num_edges);
 
       void esimate(std::vector<CVSFeature> & cvs_feature_list);
 
@@ -52,7 +52,7 @@ namespace radi
       PointCloudConstPtr point_cloud_;
       float radius_;
       float distance_;
-      float num_edges_;
+      float min_num_edges_;
   };
 
 } // namespace radi
