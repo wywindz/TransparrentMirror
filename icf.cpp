@@ -3,6 +3,9 @@
 #include <exception>
 
 #include <pcl/common/transforms.h>
+#include <pcl/PolygonMesh.h>
+#include <pcl/io/vtk_lib_io.h>
+#include <pcl/visualization/pcl_visualizer.h>
 
 #include "icf.h"
 
@@ -18,8 +21,8 @@ namespace radi
     iteration_inner_ = 20;
     has_converged = false;
     threshold_distance_near_ = 0.03;
-    threshold_distance_extreme_ = 0.3;
-    threshold_valid_ = 4.0;
+    threshold_distance_extreme_ = 0.5;
+    threshold_valid_ = 0.4;
     init_transf_ = Eigen::MatrixXf::Identity(4,4);
   }
 
@@ -157,6 +160,9 @@ namespace radi
       std::cout << "Bad initial transformation. " << msg << std::endl;
       return;
     }
+
+    std::cout << "-- OK --" << std::endl;
+    return;
 
     for (std::size_t idx_outer = 0; idx_outer < iteration_outer_; ++idx_outer)
     {
@@ -333,18 +339,45 @@ namespace radi
   IterativeClosestFace::calObjectiveValue (const Eigen::Matrix4f & mat_transf)
   {
     std::cout << "Matrix transf: \n" << mat_transf << std::endl;
-    pcl::PointCloud<pcl::PointXYZ> transformed_scene;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr transformed_scene (new pcl::PointCloud<pcl::PointXYZ> ());
     // pcl::transformPointCloud(*scene_point_cloud_, transformed_scene, mat_transf);
-    Eigen::Matrix4f inv_mat_transf = mat_transf.inverse ();
-    pcl::transformPointCloud(*scene_point_cloud_, transformed_scene, inv_mat_transf);
+    Eigen::Matrix4f mat_camera = Eigen::Matrix4Xf::Identity(4,4);
+    mat_camera(0,0) = 0.7071;
+    mat_camera(0,1) = -0.5;
+    mat_camera(0,2) = 0.5;
+    mat_camera(1,0) = 0.7071;
+    mat_camera(1,1) = 0.5;
+    mat_camera(1,2) = -0.5;
+    mat_camera(2,0) = 0.0;
+    mat_camera(2,1) = 0.7071;
+    mat_camera(2,2) = 0.7071;
+
+    mat_camera(0,3) = 2.0;
+    mat_camera(1,3) = -2.0;
+    mat_camera(2,3) = 2.0;
+    Eigen::Matrix4f mat_transf_total = mat_camera * mat_transf.inverse();
+    // Eigen::Matrix4f inv_mat_transf = mat_transf.inverse ();
+    pcl::transformPointCloud(*scene_point_cloud_, *transformed_scene, mat_transf_total);
+    // pcl::transformPointCloud(*scene_point_cloud_, transformed_scene, inv_mat_transf);
+
+    // Show 3d model and transformed point cloud.
+    pcl::PolygonMesh mesh;
+    pcl::io::loadPolygonFileSTL("cuboid.stl", mesh);
+    pcl::visualization::PCLVisualizer viewer ("Model & Point Cloud");
+    viewer.addPolygonMesh(mesh);
+    viewer.addPointCloud<pcl::PointXYZ> (transformed_scene, "Transformed point cloud");
+    while (!viewer.wasStopped ())
+    {
+      viewer.spinOnce();
+    }
 
     float objective_value = 0.0;
-    for (std::size_t i = 0; i < transformed_scene.points.size(); ++i)
+    for (std::size_t i = 0; i < (*transformed_scene).points.size(); ++i)
     {
       Eigen::Vector3f point;
-      point[0] = static_cast<float>(transformed_scene.points[i].x);
-      point[1] = static_cast<float>(transformed_scene.points[i].y);
-      point[2] = static_cast<float>(transformed_scene.points[i].z);
+      point[0] = static_cast<float>((*transformed_scene).points[i].x);
+      point[1] = static_cast<float>((*transformed_scene).points[i].y);
+      point[2] = static_cast<float>((*transformed_scene).points[i].z);
       std::vector<float> distance_list(model_mesh_.getNumTriangles());
       for (std::size_t j = 0; j < model_mesh_.getNumTriangles(); ++j)
       {
@@ -355,6 +388,7 @@ namespace radi
       if (shortest_distance > threshold_distance_extreme_)
       {
         // ToDo: Throw an exception.
+        std::cout << "Shortest distance: " << shortest_distance << std::endl;
         throw "Too large distance.";
       }
 

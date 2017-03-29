@@ -61,7 +61,8 @@ namespace radi
               std::size_t idx_vector_model = (*model_features_)[idx_scene].getIndexPairs()[idx_angle_model][0];
               Eigen::Vector3f vect_scene = (*scene_features_)[idx_scene].getVector(idx_vector_scene);
               Eigen::Vector3f vect_model = (*model_features_)[idx_model].getVector(idx_vector_model);
-              mat_covariance += vect_scene * vect_model.transpose();
+              // mat_covariance += vect_scene * vect_model.transpose();
+              mat_covariance += vect_model * vect_scene.transpose();
             }
 
             Eigen::JacobiSVD<Eigen::Matrix3f> svd_solver;
@@ -71,8 +72,10 @@ namespace radi
 
             Eigen::Matrix4f mat_transf = Eigen::MatrixXf::Identity(4,4);
             mat_transf.block(0,0,3,3) = mat_rotation;
-            mat_transf.block(0,3,3,1) = (*scene_features_)[idx_scene].getCornerPosition()
-                    - (*model_features_)[idx_model].getCornerPosition();
+            // mat_transf.block(0,3,3,1) = -mat_rotation * (*scene_features_)[idx_scene].getCornerPosition()
+            //         + (*model_features_)[idx_model].getCornerPosition();
+            mat_transf.block(0,3,3,1) = -mat_rotation * (*model_features_)[idx_scene].getCornerPosition()
+                    + (*scene_features_)[idx_model].getCornerPosition();
 
             // ToDo: Detect if the transformation can be applied to other features.
             if (scene_features_->size() > 1)
@@ -137,19 +140,19 @@ namespace radi
         {
           idx_start = idx_model;
           // Start to match the angles.
-          bool flagMatched = true;
+          bool flag_matched = true;
           for (std::size_t k = 0; k < angle_sequence_scene.size(); ++k)
           {
             float angle_scene = angle_sequence_scene[k];
             float angle_model = angle_sequence_model[(idx_start+k)%angle_sequence_model.size()];
             if (std::abs(angle_scene-angle_model) > threshold_)
             {
-              flagMatched = false;
+              flag_matched = false;
               break;
             }
           }
 
-          if (flagMatched)
+          if (flag_matched)
           {
             std::vector<pcl::Correspondence> corresp_list;
             for (std::size_t k = 0; k < angle_sequence_scene.size(); ++k)

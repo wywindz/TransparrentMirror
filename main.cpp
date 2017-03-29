@@ -60,8 +60,8 @@ int main ()
   cvsFeatures[0].appendVector(-xAxis);
   cvsFeatures[0].compute();
 
-  std::cout << "Position of corner-0: " << pos_corner_0_camera[0] << " "
-            << pos_corner_0_camera[1] << " " << pos_corner_0_camera[2] << std::endl;
+  // std::cout << "Position of corner-0: " << pos_corner_0_camera[0] << " "
+  //           << pos_corner_0_camera[1] << " " << pos_corner_0_camera[2] << std::endl;
 
   Eigen::Vector3f pos_corner_1 (0.5, 1.0, -0.5);
   Eigen::Vector3f pos_corner_1_camera = inv_mat_camera.block(0,0,3,3)*pos_corner_1 + inv_mat_camera.block(0,3,3,1);
@@ -73,8 +73,8 @@ int main ()
   cvsFeatures[1].appendVector(zAxis);
   cvsFeatures[1].compute();
 
-  std::cout << "Position of corner-1: " << pos_corner_1_camera[0] << " "
-            << pos_corner_1_camera[1] << " " << pos_corner_1_camera[2] << std::endl;
+  // std::cout << "Position of corner-1: " << pos_corner_1_camera[0] << " "
+  //           << pos_corner_1_camera[1] << " " << pos_corner_1_camera[2] << std::endl;
 
   Eigen::Vector3f pos_corner_2 (0.5, -1.0, 0.5);
   Eigen::Vector3f pos_corner_2_camera = inv_mat_camera.block(0,0,3,3)*pos_corner_2 + inv_mat_camera.block(0,3,3,1);
@@ -86,8 +86,8 @@ int main ()
   cvsFeatures[2].appendVector(-zAxis);
   cvsFeatures[2].compute();
 
-  std::cout << "Position of corner-2: " << pos_corner_2_camera[0] << " "
-            << pos_corner_2_camera[1] << " " << pos_corner_2_camera[2] << std::endl;
+  // std::cout << "Position of corner-2: " << pos_corner_2_camera[0] << " "
+  //           << pos_corner_2_camera[1] << " " << pos_corner_2_camera[2] << std::endl;
 
   Eigen::Vector3f pos_corner_3 (0.5, -1.0, -0.5);
   Eigen::Vector3f pos_corner_3_camera = inv_mat_camera.block(0,0,3,3)*pos_corner_3 + inv_mat_camera.block(0,3,3,1);
@@ -99,8 +99,8 @@ int main ()
   cvsFeatures[3].appendVector(zAxis);
   cvsFeatures[3].compute();
 
-  std::cout << "Position of corner-3: " << pos_corner_3_camera[0] << " "
-            << pos_corner_3_camera[1] << " " << pos_corner_3_camera[2] << std::endl;
+  // std::cout << "Position of corner-3: " << pos_corner_3_camera[0] << " "
+  //           << pos_corner_3_camera[1] << " " << pos_corner_3_camera[2] << std::endl;
 
   Eigen::Vector3f pos_corner_4 (-0.5, 1.0, 0.5);
   Eigen::Vector3f pos_corner_4_camera = inv_mat_camera.block(0,0,3,3)*pos_corner_4 + inv_mat_camera.block(0,3,3,1);
@@ -112,8 +112,8 @@ int main ()
   cvsFeatures[4].appendVector(-zAxis);
   cvsFeatures[4].compute();
 
-  std::cout << "Position of corner-4: " << pos_corner_4_camera[0] << " "
-            << pos_corner_4_camera[1] << " " << pos_corner_4_camera[2] << std::endl;
+  // std::cout << "Position of corner-4: " << pos_corner_4_camera[0] << " "
+  //           << pos_corner_4_camera[1] << " " << pos_corner_4_camera[2] << std::endl;
 
   Eigen::Vector3f pos_corner_5 (-0.5, 1.0, -0.5);
   Eigen::Vector3f pos_corner_5_camera = inv_mat_camera.block(0,0,3,3)*pos_corner_5 + inv_mat_camera.block(0,3,3,1);
@@ -125,8 +125,8 @@ int main ()
   cvsFeatures[5].appendVector(zAxis);
   cvsFeatures[5].compute();
 
-  std::cout << "Position of corner-5: " << pos_corner_5_camera[0] << " "
-            << pos_corner_5_camera[1] << " " << pos_corner_5_camera[2] << std::endl;
+  // std::cout << "Position of corner-5: " << pos_corner_5_camera[0] << " "
+  //           << pos_corner_5_camera[1] << " " << pos_corner_5_camera[2] << std::endl;
 
   Eigen::Vector3f pos_corner_6 (-0.5, -1.0, 0.5);
   Eigen::Vector3f pos_corner_6_camera = inv_mat_camera.block(0,0,3,3)*pos_corner_6 + inv_mat_camera.block(0,3,3,1);
@@ -138,8 +138,8 @@ int main ()
   cvsFeatures[6].appendVector(-zAxis);
   cvsFeatures[6].compute();
 
-  std::cout << "Position of corner-6: " << pos_corner_6_camera[0] << " "
-            << pos_corner_6_camera[1] << " " << pos_corner_6_camera[2] << std::endl;
+  // std::cout << "Position of corner-6: " << pos_corner_6_camera[0] << " "
+  //           << pos_corner_6_camera[1] << " " << pos_corner_6_camera[2] << std::endl;
 
   Eigen::Vector3f pos_corner_7 (-0.5, -1.0, -0.5);
   Eigen::Vector3f pos_corner_7_camera = inv_mat_camera.block(0,0,3,3)*pos_corner_7 + inv_mat_camera.block(0,3,3,1);
@@ -151,8 +151,8 @@ int main ()
   cvsFeatures[7].appendVector(zAxis);
   cvsFeatures[7].compute();
 
-  std::cout << "Position of corner-7: " << pos_corner_7_camera[0] << " "
-            << pos_corner_7_camera[1] << " " << pos_corner_7_camera[2] << std::endl;
+  // std::cout << "Position of corner-7: " << pos_corner_7_camera[0] << " "
+  //           << pos_corner_7_camera[1] << " " << pos_corner_7_camera[2] << std::endl;
 
   // const std::vector<float> & angles = cvsFeatures[7].getIncludedAngles();
   // std::cout << angles[0] << "  " << angles[1] << "  " << angles[2] << std::endl;
