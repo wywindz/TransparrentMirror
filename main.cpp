@@ -160,7 +160,7 @@ int main ()
   //
   // Load pcd file.
   pcl::PointCloud<pcl::PointXYZ>::Ptr sceneRaw(new pcl::PointCloud<pcl::PointXYZ>());
-  if (pcl::io::loadPCDFile<pcl::PointXYZ>("cuboid00000.pcd", *sceneRaw) == -1)
+  if (pcl::io::loadPCDFile<pcl::PointXYZ>("./Models/cuboid00000.pcd", *sceneRaw) == -1)
   {
     PCL_ERROR("Couldn't read file cuboid00000.pcd.\n");
     return -1;
@@ -172,7 +172,7 @@ int main ()
   pcl::PointCloud<pcl::PointXYZ>::Ptr sceneNaNClean(new pcl::PointCloud<pcl::PointXYZ>());
   std::vector<int> indices;
   pcl::removeNaNFromPointCloud(*sceneRaw, *sceneNaNClean, indices);
-  pcl::io::savePCDFileASCII<pcl::PointXYZ>("cuboid_nan_clean.pcd", *sceneNaNClean);
+  pcl::io::savePCDFileASCII<pcl::PointXYZ>("./Models/cuboid_nan_clean.pcd", *sceneNaNClean);
 
   // Remove outliers.
   pcl::PointCloud<pcl::PointXYZ>::Ptr sceneFiltered(new pcl::PointCloud<pcl::PointXYZ>);
@@ -218,7 +218,7 @@ int main ()
   // Perform ICF algorithm. Refine the tramsformations.
   radi::IterativeClosestFace icf;
   icf.setScenePointCloud(sceneDownSampled);
-  icf.setReferenceModel("cuboid.stl");
+  icf.setReferenceModel("Models/cuboid.stl");
   std::cout << "Number of triangles: " << icf.getReferenceModel().getNumTriangles() << std::endl;
   for (std::size_t i = 0; i < mat_transf_list.size(); ++i)
   {

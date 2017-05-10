@@ -23,6 +23,7 @@ link_directories(${QT_LIBRARIES})
 set(SRC_LIST 
     main.cpp 
     cvs.cpp 
+    ccn.cpp
     edge_detector.cpp 
     cvs_estimation.cpp 
     icf.cpp 

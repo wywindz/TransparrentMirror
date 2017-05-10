@@ -362,7 +362,7 @@ namespace radi
 
     // Show 3d model and transformed point cloud.
     pcl::PolygonMesh mesh;
-    pcl::io::loadPolygonFileSTL("cuboid.stl", mesh);
+    pcl::io::loadPolygonFileSTL("Models/cuboid.stl", mesh);
     pcl::visualization::PCLVisualizer viewer ("Model & Point Cloud");
     viewer.addPolygonMesh(mesh);
     viewer.addPointCloud<pcl::PointXYZ> (transformed_scene, "Transformed point cloud");
