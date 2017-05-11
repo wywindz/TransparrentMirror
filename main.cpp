@@ -11,6 +11,10 @@
 #include "cvs.h"
 #include "cvs_estimation.h"
 #include "cvs_corresp_group.h"
+#include "ccn.h"
+#include "ccn_estimation.h"
+#include "ccn_corresp_group.h"
+#include "board_detector.h"
 #include "icf.h"
 
 int main ()
@@ -159,10 +163,17 @@ int main ()
 
   //
   // Load pcd file.
+  // pcl::PointCloud<pcl::PointXYZ>::Ptr sceneRaw(new pcl::PointCloud<pcl::PointXYZ>());
+  // if (pcl::io::loadPCDFile<pcl::PointXYZ>("./Models/cuboid00000.pcd", *sceneRaw) == -1)
+  // {
+  //   PCL_ERROR("Couldn't read file cuboid00000.pcd.\n");
+  //   return -1;
+  // }
+
   pcl::PointCloud<pcl::PointXYZ>::Ptr sceneRaw(new pcl::PointCloud<pcl::PointXYZ>());
-  if (pcl::io::loadPCDFile<pcl::PointXYZ>("./Models/cuboid00000.pcd", *sceneRaw) == -1)
+  if (pcl::io::loadPCDFile<pcl::PointXYZ>("./Models/cup00000.pcd", *sceneRaw) == -1)
   {
-    PCL_ERROR("Couldn't read file cuboid00000.pcd.\n");
+    PCL_ERROR("Couldn't read file cup00000.pcd.\n");
     return -1;
   }
 
@@ -172,7 +183,8 @@ int main ()
   pcl::PointCloud<pcl::PointXYZ>::Ptr sceneNaNClean(new pcl::PointCloud<pcl::PointXYZ>());
   std::vector<int> indices;
   pcl::removeNaNFromPointCloud(*sceneRaw, *sceneNaNClean, indices);
-  pcl::io::savePCDFileASCII<pcl::PointXYZ>("./Models/cuboid_nan_clean.pcd", *sceneNaNClean);
+  // pcl::io::savePCDFileASCII<pcl::PointXYZ>("./Models/cuboid_nan_clean.pcd", *sceneNaNClean);
+  pcl::io::savePCDFileASCII<pcl::PointXYZ>("./Models/cup_nan_clean.pcd", *sceneNaNClean);
 
   // Remove outliers.
   pcl::PointCloud<pcl::PointXYZ>::Ptr sceneFiltered(new pcl::PointCloud<pcl::PointXYZ>);
@@ -189,7 +201,7 @@ int main ()
   voxGrid.setLeafSize(0.01, 0.01, 0.01);
   voxGrid.filter(*sceneDownSampled);
 
-  // // Visualize the downsampled point cloud.
+  // Visualize the downsampled point cloud.
   // pcl::visualization::PCLVisualizer viewer("Downsample");
   // viewer.addPointCloud(sceneDownSampled, "Scene Downsmapled");
   // while (!viewer.wasStopped()) {
@@ -199,33 +211,41 @@ int main ()
   std::cout << "Number of points in the pcd file: " << sceneRaw->size() << std::endl;
   std::cout << "Number of points after filtering and downsampling: " << sceneDownSampled->size() << std::endl;
 
-  std::vector<radi::CVSFeature> cvs_feature_list;
-  radi::CVSEstimation cvs_estimation;
-  cvs_estimation.setInputCloud(sceneDownSampled);
-  cvs_estimation.esimate(cvs_feature_list);
+  // Detect board points.
+  radi::BoardDetector board_detector;
+  board_detector.setInputCloud(sceneDownSampled);
+  std::vector<int> board_indices;
+  board_detector.compute(board_indices);
 
-  std::cout << "Number of cvs features: " << cvs_feature_list.size() << std::endl;
+  std::cout << "Number of board points: " << board_indices.size () << std::endl;
 
-  // Corresponce group.
-  radi::CVSCorrespGroup corresp_group;
-  corresp_group.setSceneFeatures(&cvs_feature_list);
-  corresp_group.setModelFeatures(&cvsFeatures);
-  std::vector<Eigen::Matrix4f> mat_transf_list;
-  corresp_group.recognize(mat_transf_list);
+  // std::vector<radi::CVSFeature> cvs_feature_list;
+  // radi::CVSEstimation cvs_estimation;
+  // cvs_estimation.setInputCloud(sceneDownSampled);
+  // cvs_estimation.esimate(cvs_feature_list);
 
-  std::cout << mat_transf_list.size() << std::endl;
+  // std::cout << "Number of cvs features: " << cvs_feature_list.size() << std::endl;
 
-  // Perform ICF algorithm. Refine the tramsformations.
-  radi::IterativeClosestFace icf;
-  icf.setScenePointCloud(sceneDownSampled);
-  icf.setReferenceModel("Models/cuboid.stl");
-  std::cout << "Number of triangles: " << icf.getReferenceModel().getNumTriangles() << std::endl;
-  for (std::size_t i = 0; i < mat_transf_list.size(); ++i)
-  {
-    icf.setInitialTransformation(mat_transf_list[i]);
-    Eigen::Matrix4f mat_transf;
-    icf.estimate(mat_transf);
-  }
+  // // Corresponce group.
+  // radi::CVSCorrespGroup corresp_group;
+  // corresp_group.setSceneFeatures(&cvs_feature_list);
+  // corresp_group.setModelFeatures(&cvsFeatures);
+  // std::vector<Eigen::Matrix4f> mat_transf_list;
+  // corresp_group.recognize(mat_transf_list);
+
+  // std::cout << mat_transf_list.size() << std::endl;
+
+  // // Perform ICF algorithm. Refine the tramsformations.
+  // radi::IterativeClosestFace icf;
+  // icf.setScenePointCloud(sceneDownSampled);
+  // icf.setReferenceModel("Models/cuboid.stl");
+  // std::cout << "Number of triangles: " << icf.getReferenceModel().getNumTriangles() << std::endl;
+  // for (std::size_t i = 0; i < mat_transf_list.size(); ++i)
+  // {
+  //   icf.setInitialTransformation(mat_transf_list[i]);
+  //   Eigen::Matrix4f mat_transf;
+  //   icf.estimate(mat_transf);
+  // }
 
 
   // //

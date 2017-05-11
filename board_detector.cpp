@@ -53,7 +53,7 @@ namespace radi
       octree.nearestKSearch(point, k_, neighbor_indices, neighbor_distances);
       neighbor_indices_list[idx_point] = neighbor_indices;
 
-      if (neighbor_indices.size ())
+      if (neighbor_indices.size () > 1)
       {
         mu_list[idx_point] = boost::accumulate(neighbor_distances, 0.0) / neighbor_indices.size();
         // Calculate the center location of the neighborhood.
@@ -108,6 +108,18 @@ namespace radi
         omega_cr_list[idx_point] = std::max (lambda_1-lambda_0, std::abs (lambda_2-lambda_1-lambda_0))
                 / lambda_2 * eig_vector_2;
         omega_co_list[idx_point] = (lambda_2 - lambda_0) / lambda_2;
+
+        omega_b_1_list[idx_point] = std::abs(lambda_2 - 2.0*lambda_1) / lambda_2 * eig_vector_2;
+
+        // Calculate beta.
+        std::vector<Eigen::Vector3f> project_vectors(neighbor_indices.size () - 1);
+        for (std::size_t idx_neighbor = 1; idx_neighbor < neighbor_indices.size(); ++idx_neighbor)
+        {
+          const pcl::PointXYZ & point_neighbor = (*point_cloud_)[neighbor_indices[idx_neighbor]];
+          Eigen::Vector3f point_q (point_neighbor.x, point_neighbor.y, point_neighbor.z);
+          Eigen::Vector3f vect_pq = point_q - point_p;
+        }
+
       }
     }
 
@@ -150,14 +162,17 @@ namespace radi
           }
         }
 
-        // std::cout << "Candidates in the queue: " << queue.size() << std::endl;
-        std::vector<std::size_t> order_edge (queue.size ());
-        std::iota (order_edge.begin (), order_edge.end (), 0);
-        std::sort(order_edge.begin(), order_edge.end(),
-                  [&queue_weights](int idx_1, int idx_2){ return queue_weights[idx_1] < queue_weights[idx_2]; });
+        if (!queue.empty())
+        {
+          // std::cout << "Candidates in the queue: " << queue.size() << std::endl;
+          std::vector<std::size_t> order_edge (queue.size ());
+          std::iota (order_edge.begin (), order_edge.end (), 0);
+          std::sort(order_edge.begin(), order_edge.end(),
+                    [&queue_weights](int idx_1, int idx_2){ return queue_weights[idx_1] < queue_weights[idx_2]; });
 
-        board_point_indices.push_back(queue[order_edge[0]][0]);
-        board_point_indices.push_back(queue[order_edge[0]][1]);
+          board_point_indices.push_back(queue[order_edge[0]][0]);
+          board_point_indices.push_back(queue[order_edge[0]][1]);
+        }
       }
     }
 
