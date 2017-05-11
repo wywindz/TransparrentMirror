@@ -19,17 +19,20 @@ namespace radi
       ~CCNFeature ();
 
       void
-      append (const Eigen::Vector3f & center, const Eigen::Vector3f & normal);
+      setCenter(const Eigen::Vector3f & center);
 
-      const std::vector<Eigen::Vector3f> &
-      getCenterList() const;
+      void
+      setNormal(const Eigen::Vector3f & normal);
 
-      const std::vector<Eigen::Vector3f> &
-      getNormalList () const;
+      const Eigen::Vector3f &
+      getCenter() const;
+
+      const Eigen::Vector3f &
+      getNormal () const;
 
     private:
-      std::vector<Eigen::Vector3f> center_list_;
-      std::vector<Eigen::Vector3f> normal_list_;
+      Eigen::Vector3f center_;
+      Eigen::Vector3f normal_;
   };
 
   void

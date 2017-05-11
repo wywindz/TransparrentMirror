@@ -23,13 +23,16 @@ link_directories(${QT_LIBRARIES})
 set(SRC_LIST 
     main.cpp 
     cvs.cpp 
-    ccn.cpp
     edge_detector.cpp 
     cvs_estimation.cpp 
-    icf.cpp 
+    cvs_corresp_group.cpp
+    ccn.cpp
+    board_detector.cpp
+    ccn_estimation.cpp
+    ccn_corresp_group.cpp
+    icf.cpp
     mesh.cpp 
-    pose.cpp 
-    cvs_corresp_group.cpp)
+    pose.cpp)
 
 add_executable(transparent_mirror ${SRC_LIST})
 target_link_libraries(transparent_mirror ${PCL_LIBRARIES})
