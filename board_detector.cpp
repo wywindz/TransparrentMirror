@@ -16,6 +16,9 @@
 namespace radi
 {
 
+  float
+  calMaxIncludedAngle(const std::vector<Eigen::Vector3f> & vectors, const Eigen::Vector3f & normal);
+
   BoardDetector::BoardDetector() : k_(10)
   { }
 
@@ -118,7 +121,11 @@ namespace radi
           const pcl::PointXYZ & point_neighbor = (*point_cloud_)[neighbor_indices[idx_neighbor]];
           Eigen::Vector3f point_q (point_neighbor.x, point_neighbor.y, point_neighbor.z);
           Eigen::Vector3f vect_pq = point_q - point_p;
+          project_vectors[idx_neighbor-1] = vect_pq - vect_pq.dot(eig_vector_0)/eig_vector_0.dot(eig_vector_0) * eig_vector_0;
         }
+
+        float beta = calMaxIncludedAngle(project_vectors, eig_vector_0);
+        omega_b_2_list[idx_point] = 1.0 - beta / (2.0*3.14151926);
 
       }
     }
@@ -132,11 +139,11 @@ namespace radi
     }
 
     // Detect edge.
-    float tau = 0.5;
+    float tau = 0.7;
     float gamma = 0.5;
     for (std::size_t idx_point = 0; idx_point < point_cloud_->size (); ++idx_point)
     {
-      if (omega_cr_list[idx_point].norm () < tau)
+      if (omega_b_2_list[idx_point] < tau)
       {
         const pcl::PointXYZ & point = (*point_cloud_)[idx_point];
         Eigen::Vector3f point_p (point.x, point.y, point.z);
@@ -179,6 +186,44 @@ namespace radi
     // Remove duplicate indices.
     std::set<int> edge_point_indices_set(board_point_indices.begin(), board_point_indices.end());
     board_point_indices = std::vector<int>(edge_point_indices_set.begin(), edge_point_indices_set.end());
+  }
+
+  float
+  calMaxIncludedAngle (const std::vector<Eigen::Vector3f> & vectors, const Eigen::Vector3f & normal)
+  {
+    // Choose the first vector as X axis.
+    Eigen::Vector3f x_axis = vectors[0] / vectors[0].norm ();
+    Eigen::Vector3f y_axis = (normal/normal.norm ()).cross (x_axis);
+
+    std::vector<float> included_angles (vectors.size ());
+    for (int idx_vector = 0; idx_vector < vectors.size (); ++idx_vector)
+    {
+      float x_comp = vectors[idx_vector].dot (x_axis) / x_axis.dot (x_axis);
+      float y_comp = vectors[idx_vector].dot (y_axis) / y_axis.dot (y_axis);
+      included_angles[idx_vector] = std::atan2 (y_comp, x_comp);
+      if (included_angles[idx_vector] < 0)
+      {
+        included_angles[idx_vector] += 2*3.1415926;
+      }
+    }
+
+    // Sort the included angles.
+    std::vector<std::size_t> order_indices (included_angles.size ());
+    std::iota (order_indices.begin (), order_indices.end (), 0);
+    std::sort (order_indices.begin(), order_indices.end(),
+        [&included_angles](int idx_1, int idx_2){ return included_angles[idx_1] < included_angles[idx_2]; });
+
+    float beta = 0.0;
+    for (int idx_order = 0; idx_order < order_indices.size () - 1 ; ++idx_order)
+    {
+      float angle = included_angles[order_indices[idx_order+1]] - included_angles[order_indices[idx_order]];
+      if (angle > beta)
+      {
+        beta = angle;
+      }
+    }
+
+    return (beta);
   }
 
 } // namespace radi

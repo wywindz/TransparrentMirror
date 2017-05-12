@@ -211,13 +211,31 @@ int main ()
   std::cout << "Number of points in the pcd file: " << sceneRaw->size() << std::endl;
   std::cout << "Number of points after filtering and downsampling: " << sceneDownSampled->size() << std::endl;
 
-  // Detect board points.
-  radi::BoardDetector board_detector;
-  board_detector.setInputCloud(sceneDownSampled);
-  std::vector<int> board_indices;
-  board_detector.compute(board_indices);
+  radi::CCNEstimation ccn_estimator;
+  std::vector<radi::CCNFeature> ccn_feature_list;
+  ccn_estimator.setInputCloud(sceneDownSampled);
+  ccn_estimator.esimate(ccn_feature_list);
 
-  std::cout << "Number of board points: " << board_indices.size () << std::endl;
+  // // Detect board points.
+  // radi::BoardDetector board_detector;
+  // board_detector.setInputCloud(sceneDownSampled);
+  // std::vector<int> board_indices;
+  // board_detector.compute(board_indices);
+
+  // std::cout << "Number of board points: " << board_indices.size () << std::endl;
+
+  // // Visualize board points.
+  // pcl::PointCloud<pcl::PointXYZ>::Ptr cloudPlane(new pcl::PointCloud<pcl::PointXYZ>);
+  // pcl::ExtractIndices<pcl::PointXYZ> extracter;
+  // extracter.setInputCloud(sceneDownSampled);
+  // extracter.setIndices(boost::make_shared<std::vector<int> > (board_indices));
+  // extracter.setNegative(false);
+  // extracter.filter(*cloudPlane);
+  // pcl::visualization::PCLVisualizer viewer("Board Points");
+  // viewer.addPointCloud(cloudPlane, "Board points");
+  // while (!viewer.wasStopped()) {
+  //     viewer.spinOnce();
+  // }
 
   // std::vector<radi::CVSFeature> cvs_feature_list;
   // radi::CVSEstimation cvs_estimation;
