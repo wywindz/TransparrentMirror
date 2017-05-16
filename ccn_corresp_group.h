@@ -19,6 +19,13 @@ namespace radi
       CCNCorrespGroup ();
       ~CCNCorrespGroup ();
 
+      // typedefs
+      typedef pcl::PointCloud<pcl::PointXYZ> PointCloud;
+      typedef boost::shared_ptr<const PointCloud> PointCloudConstPtr;
+
+      void
+      setInputCloud (const PointCloudConstPtr & point_cloud);
+
       void
       setModelFeatures (const std::vector<CCNFeature> * model_features);
 
@@ -26,10 +33,10 @@ namespace radi
       setSceneFeatures (const std::vector<CCNFeature> * scene_features);
 
       void
-      setThresholdRadius (float threshold_radius);
+      setRadiusVariation (float radius_variation);
 
-      void
-      setThresholdNormal (float threshold_normal);
+      inline void
+      setResolution (float resolution) { resolution_ = resolution; }
 
       inline const std::vector<CCNFeature> *
       getModelFeatures () const { return model_features_; }
@@ -38,10 +45,10 @@ namespace radi
       getSceneFeatures () const { return scene_features_; }
 
       inline float
-      getThresholdRadius () const { return threshold_radius_; }
+      getRadiusVariation () const { return radius_variation_; }
 
       inline float
-      getThresholdNormal () const { return threshold_normal_; }
+      getResolution () const { return resolution_; }
 
       void
       recognize (std::vector<Eigen::Matrix4f> & transf_list);
@@ -51,14 +58,11 @@ namespace radi
                  std::vector<pcl::Correspondence> & feature_corresp_list);
 
     private:
-      const std::vector<CCNFeature> * model_features_;
-      const std::vector<CCNFeature> * scene_features_;
-      float threshold_radius_;
-      float threshold_normal_;
-
-      bool
-      pairFeatures (const CCNFeature & scene_feature,
-              const CCNFeature & model_feature, std::vector<std::vector<pcl::Correspondence> > & corresps_list);
+      PointCloudConstPtr point_cloud_;    /*!< Input point cloud. */
+      const std::vector<CCNFeature> * model_features_;    /*<! Model feature list. */
+      const std::vector<CCNFeature> * scene_features_;    /*<! Point cloud feature list. */
+      float radius_variation_;    /*<! Variation of radius which is used to pair 2 features. */
+      float resolution_;   /*<! Resolution around the normal of circle plane. */
 
   }; // class CCNCorrespGroup
 

@@ -18,7 +18,8 @@ namespace radi
   void
   removeIndices (std::vector<int> & source_indices, const std::vector<int> & removed_indices);
 
-  CCNEstimation::CCNEstimation() : min_radius_(0.1), min_num_points_(20)
+  CCNEstimation::CCNEstimation() : min_radius_(0.1), max_radius_(1.0), search_radius_(0.2),
+      threshold_position_(0.1), threshold_radius_(0.05), threshold_angle_(0.5), min_num_points_(20)
   { }
 
   CCNEstimation::~CCNEstimation()
@@ -31,15 +32,30 @@ namespace radi
   }
 
   void
-  CCNEstimation::setMinRadius (float min_radius)
+  CCNEstimation::setRadiusLimits (float min_radius, float max_radius)
   {
     min_radius_ = min_radius;
+    max_radius_ = max_radius;
   }
 
   void
-  CCNEstimation::setMinNumPoints (std::size_t min_num_points)
+  CCNEstimation::setSearchRadius (float search_radius)
+  {
+    search_radius_ = search_radius;
+  }
+
+  void
+  CCNEstimation::setMinNumPoints (int min_num_points)
   {
     min_num_points_ = min_num_points;
+  }
+
+  void
+  CCNEstimation::setIdentityThresholds(float position, float radius, float angle)
+  {
+    threshold_position_ = position;
+    threshold_radius_ = radius;
+    threshold_angle_ = angle;
   }
 
   void CCNEstimation::esimate(std::vector<CCNFeature> & ccn_feature_list)
@@ -57,28 +73,53 @@ namespace radi
     sac_segment.setInputCloud(this->point_cloud_);
     sac_segment.setModelType(pcl::SACMODEL_CIRCLE3D);
     sac_segment.setMethodType(pcl::SAC_RANSAC);
-    sac_segment.setMaxIterations(100);
+    sac_segment.setMaxIterations(1000);
+    sac_segment.setRadiusLimits(min_radius_, max_radius_);
     sac_segment.setDistanceThreshold(0.01);
 
     std::vector<pcl::ModelCoefficients> circle_list;
-    std::vector<pcl::PointIndices> indices_list;
-    while (board_point_indices.size () > 10)
+    while (board_point_indices.size () > min_num_points_)
     {
       pcl::ModelCoefficients::Ptr coefficients (new pcl::ModelCoefficients);
       pcl::PointIndices::Ptr inliers (new pcl::PointIndices);
       sac_segment.setIndices(boost::make_shared<std::vector<int> >(board_point_indices));
 
-      // pcl::octree::OctreePointCloudSearch<pcl::PointXYZ>::Ptr oct_search (new pcl::octree::OctreePointCloudSearch<pcl::PointXYZ>);
-      // // oct_search->setInputCloud(this->point_cloud_);
-      // sac_segment.setSamplesMaxDist(0.1, oct_search);
+      pcl::search::KdTree<pcl::PointXYZ>::Ptr search (new pcl::search::KdTree<pcl::PointXYZ>);
+      search->setInputCloud(this->point_cloud_);
+      sac_segment.setSamplesMaxDist(search_radius_, search);
 
       sac_segment.segment(*inliers, *coefficients);
 
-      if (inliers->indices.size() >= 10)
+      if (inliers->indices.size() >= min_num_points_)
       {
         std::cout << "Number of inliers: " << inliers->indices.size() << std::endl;
-        circle_list.push_back(*coefficients);
-        indices_list.push_back(*inliers);
+        std::cout << "Model coefficients: " << *coefficients << std::endl;
+        if (~isInCircleList(*coefficients, circle_list))
+        {
+          circle_list.push_back(*coefficients);
+
+          CCNFeature ccn_feature;
+          ccn_feature.setCenter(Eigen::Vector3f((*coefficients).values[0], (*coefficients).values[1], (*coefficients).values[2]));
+          ccn_feature.setRadius((*coefficients).values[3]);
+          ccn_feature.setNormal(Eigen::Vector3f((*coefficients).values[4], (*coefficients).values[5], (*coefficients).values[6]));
+          ccn_feature_list.push_back(ccn_feature);
+        }
+
+        // // Visualize points on a circle.
+        // pcl::PointCloud<pcl::PointXYZ>::Ptr circle(new pcl::PointCloud<pcl::PointXYZ>);
+        // pcl::ExtractIndices<pcl::PointXYZ> extracter;
+        // extracter.setInputCloud(this->point_cloud_);
+        // extracter.setIndices(inliers);
+        // extracter.setNegative(false);
+        // extracter.filter(*circle);
+        // pcl::visualization::PCLVisualizer viewer("Board Points");
+        // viewer.addPointCloud(this->point_cloud_);
+        // pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> single_color(circle, 0, 255, 0);
+        // viewer.addPointCloud(circle, single_color, "Board points");
+        // viewer.setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "Board points");
+        // while (!viewer.wasStopped()) {
+        //     viewer.spinOnce();
+        // }
       }
 
       removeIndices(board_point_indices, inliers->indices);
@@ -96,6 +137,33 @@ namespace radi
   CCNEstimation::getMinNumPoints ()
   {
     return (min_num_points_);
+  }
+
+  bool
+  CCNEstimation::isInCircleList(const pcl::ModelCoefficients & coefficients, const std::vector<pcl::ModelCoefficients> & circle_list)
+  {
+    Eigen::Vector3f pos_center (coefficients.values[0], coefficients.values[1], coefficients.values[2]);
+    float radius = coefficients.values[3];
+    Eigen::Vector3f normal (coefficients.values[4], coefficients.values[5], coefficients.values[6]);
+
+    for (int idx_circle = 0; idx_circle < circle_list.size(); ++idx_circle)
+    {
+      const pcl::ModelCoefficients & coeff_exist = circle_list[idx_circle];
+      Eigen::Vector3f pos_center_exist (coeff_exist.values[0], coeff_exist.values[1], coeff_exist.values[2]);
+      float radius_exist = coeff_exist.values[3];
+      Eigen::Vector3f normal_exist (coeff_exist.values[4], coeff_exist.values[5], coeff_exist.values[6]);
+
+      float err_position = std::abs(pos_center.norm() - pos_center_exist.norm());
+      float err_radius = std::abs(radius - radius_exist);
+      float err_angle = std::acos(std::abs(normal.dot(normal_exist)));
+
+      if ((err_position < threshold_position_) && (err_radius < threshold_radius_) && (err_angle < threshold_angle_))
+      {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   void

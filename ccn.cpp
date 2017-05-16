@@ -28,6 +28,12 @@ namespace radi
     normal_ = normal;
   }
 
+  void
+  CCNFeature::setRadius(float radius)
+  {
+    radius_ = radius;
+  }
+
   const Eigen::Vector3f &
   CCNFeature::getCenter() const
   {
@@ -40,6 +46,12 @@ namespace radi
     return (normal_);
   }
 
+  float
+  CCNFeature::getRadius () const
+  {
+    return (radius_);
+  }
+
   void
   transformCCNFeature (const Eigen::Matrix4f & mat_transf,
           const CCNFeature & source_feature, CCNFeature & target_feature)
@@ -50,6 +62,7 @@ namespace radi
     Eigen::Vector3f normal_transformed = mat_transf.block(0,0,3,3)*normal;
     target_feature.setCenter(center_transformed);
     target_feature.setNormal(normal_transformed);
+    target_feature.setRadius(source_feature.getRadius ());
   }
 
 } // namespace radi

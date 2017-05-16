@@ -27,7 +27,7 @@ namespace radi
   }
 
   IterativeClosestFace::IterativeClosestFace (const std::string & model_file_path,
-          pcl::PointCloud<pcl::PointXYZ>::Ptr scene_point_cloud)
+          PointCloudConstPtr scene_point_cloud)
   {
     model_mesh_.loadModel(model_file_path);
     scene_point_cloud_ = scene_point_cloud;
@@ -45,7 +45,7 @@ namespace radi
 
   // Set point cloud of the scene.
   void
-  IterativeClosestFace::setScenePointCloud (pcl::PointCloud<pcl::PointXYZ>::Ptr scene_point_cloud)
+  IterativeClosestFace::setScenePointCloud (PointCloudConstPtr scene_point_cloud)
   {
     scene_point_cloud_ = scene_point_cloud;
   }
@@ -98,7 +98,7 @@ namespace radi
     return (model_mesh_);
   }
 
-  pcl::PointCloud<pcl::PointXYZ>::Ptr
+  IterativeClosestFace::PointCloudConstPtr
   IterativeClosestFace::getScenePointCloud () const
   {
     return scene_point_cloud_;
@@ -342,19 +342,37 @@ namespace radi
     pcl::PointCloud<pcl::PointXYZ>::Ptr transformed_scene (new pcl::PointCloud<pcl::PointXYZ> ());
     // pcl::transformPointCloud(*scene_point_cloud_, transformed_scene, mat_transf);
     Eigen::Matrix4f mat_camera = Eigen::Matrix4Xf::Identity(4,4);
-    mat_camera(0,0) = 0.7071;
-    mat_camera(0,1) = -0.5;
-    mat_camera(0,2) = 0.5;
-    mat_camera(1,0) = 0.7071;
-    mat_camera(1,1) = 0.5;
-    mat_camera(1,2) = -0.5;
-    mat_camera(2,0) = 0.0;
-    mat_camera(2,1) = 0.7071;
-    mat_camera(2,2) = 0.7071;
 
-    mat_camera(0,3) = 2.0;
-    mat_camera(1,3) = -2.0;
-    mat_camera(2,3) = 2.0;
+    // Cuboid.
+    // mat_camera(0,0) = 0.7071;
+    // mat_camera(0,1) = -0.5;
+    // mat_camera(0,2) = 0.5;
+    // mat_camera(1,0) = 0.7071;
+    // mat_camera(1,1) = 0.5;
+    // mat_camera(1,2) = -0.5;
+    // mat_camera(2,0) = 0.0;
+    // mat_camera(2,1) = 0.7071;
+    // mat_camera(2,2) = 0.7071;
+
+    // mat_camera(0,3) = 2.0;
+    // mat_camera(1,3) = -2.0;
+    // mat_camera(2,3) = 2.0;
+
+    // Cup
+    mat_camera(0,0) = 0.0;
+    mat_camera(0,1) = 1.0;
+    mat_camera(0,2) = 0.0;
+    mat_camera(1,0) = -0.3752;
+    mat_camera(1,1) = 0.0;
+    mat_camera(1,2) = 0.927;
+    mat_camera(2,0) = 0.927;
+    mat_camera(2,1) = 0.0;
+    mat_camera(2,2) = 0.3752;
+
+    mat_camera(0,3) = 2.5;
+    mat_camera(1,3) = 0.0;
+    mat_camera(2,3) = 1.0;
+
     Eigen::Matrix4f mat_transf_total = mat_camera * mat_transf.inverse();
     // Eigen::Matrix4f inv_mat_transf = mat_transf.inverse ();
     pcl::transformPointCloud(*scene_point_cloud_, *transformed_scene, mat_transf_total);
@@ -362,7 +380,8 @@ namespace radi
 
     // Show 3d model and transformed point cloud.
     pcl::PolygonMesh mesh;
-    pcl::io::loadPolygonFileSTL("Models/cuboid.stl", mesh);
+    // pcl::io::loadPolygonFileSTL("Models/cuboid.stl", mesh);
+    pcl::io::loadPolygonFileSTL("Models/cup.stl", mesh);
     pcl::visualization::PCLVisualizer viewer ("Model & Point Cloud");
     viewer.addPolygonMesh(mesh);
     viewer.addPointCloud<pcl::PointXYZ> (transformed_scene, "Transformed point cloud");

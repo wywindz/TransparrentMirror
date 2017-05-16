@@ -155,6 +155,31 @@ int main ()
   cvsFeatures[7].appendVector(zAxis);
   cvsFeatures[7].compute();
 
+  // Specify CCN Features in the model.
+  Eigen::Matrix4f mat_camera_ccn = Eigen::Matrix4Xf::Identity(4,4);
+  mat_camera_ccn(0,0) = 0.0;
+  mat_camera_ccn(0,1) = 1.0;
+  mat_camera_ccn(0,2) = 0.0;
+  mat_camera_ccn(1,0) = -0.3752;
+  mat_camera_ccn(1,1) = 0.0;
+  mat_camera_ccn(1,2) = 0.927;
+  mat_camera_ccn(2,0) = 0.927;
+  mat_camera_ccn(2,1) = 0.0;
+  mat_camera_ccn(2,2) = 0.3752;
+
+  mat_camera_ccn(0,3) = 2.5;
+  mat_camera_ccn(1,3) = 0.0;
+  mat_camera_ccn(2,3) = 1.0;
+
+  std::vector<radi::CCNFeature> ccn_features (1);
+  radi::CCNFeature ccn_feature;
+  Eigen::Vector3f center (1.0, 0.0, 0.0);
+  Eigen::Vector3f normal (0.0, 0.0, 1.0);
+  ccn_feature.setCenter(center);
+  ccn_feature.setNormal(normal);
+  ccn_feature.setRadius(0.17);
+  transformCCNFeature(mat_camera_ccn.inverse(), ccn_feature, ccn_features[0]);
+
   // std::cout << "Position of corner-7: " << pos_corner_7_camera[0] << " "
   //           << pos_corner_7_camera[1] << " " << pos_corner_7_camera[2] << std::endl;
 
@@ -215,6 +240,15 @@ int main ()
   std::vector<radi::CCNFeature> ccn_feature_list;
   ccn_estimator.setInputCloud(sceneDownSampled);
   ccn_estimator.esimate(ccn_feature_list);
+
+  std::cout << "Number of ccn features in the scene cloud: " << ccn_feature_list.size() << std::endl;
+
+  radi::CCNCorrespGroup ccn_corresp;
+  ccn_corresp.setInputCloud(sceneDownSampled);
+  ccn_corresp.setModelFeatures(&ccn_features);
+  ccn_corresp.setSceneFeatures(&ccn_feature_list);
+  std::vector<Eigen::Matrix4f> transf_list;
+  ccn_corresp.recognize(transf_list);
 
   // // Detect board points.
   // radi::BoardDetector board_detector;

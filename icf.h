@@ -18,16 +18,22 @@ namespace radi
   class IterativeClosestFace
   {
     public:
+
+      // typedefs
+      typedef pcl::PointCloud<pcl::PointXYZ> PointCloud;
+      typedef boost::shared_ptr<const PointCloud> PointCloudConstPtr;
+
+
       IterativeClosestFace ();
       IterativeClosestFace (const std::string & model_file_path,
-                           pcl::PointCloud<pcl::PointXYZ>::Ptr scene_point_cloud);
+                           PointCloudConstPtr scene_point_cloud);
       ~IterativeClosestFace ();
 
       void
       setReferenceModel (const std::string & model_file_path);
 
       void
-      setScenePointCloud (pcl::PointCloud<pcl::PointXYZ>::Ptr scene_point_cloud);
+      setScenePointCloud (PointCloudConstPtr scene_point_cloud);
 
       void
       setMinRangeTranslation (const Eigen::Vector3f & min_range);
@@ -53,7 +59,7 @@ namespace radi
       const Mesh &
       getReferenceModel () const;
 
-      pcl::PointCloud<pcl::PointXYZ>::Ptr
+      PointCloudConstPtr
       getScenePointCloud () const;
 
       const Eigen::Vector3f
@@ -85,7 +91,7 @@ namespace radi
 
     private:
       Mesh model_mesh_;
-      pcl::PointCloud<pcl::PointXYZ>::Ptr scene_point_cloud_;
+      PointCloudConstPtr scene_point_cloud_;
       Eigen::Vector3f min_range_translation_;
       Eigen::Vector3f max_range_translation_;
       Eigen::Vector3f min_range_rotation_;

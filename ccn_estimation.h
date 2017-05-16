@@ -8,6 +8,7 @@
 
 #include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
+#include <pcl/sample_consensus/sac_model_circle3d.h>
 #include <Eigen/Core>
 
 #include "ccn.h"
@@ -28,10 +29,16 @@ namespace radi
       setInputCloud (const PointCloudConstPtr & point_cloud);
 
       void
-      setMinRadius (float min_radius);
+      setRadiusLimits (float min_radius, float max_radius);
 
       void
-      setMinNumPoints (std::size_t min_num_points);
+      setSearchRadius (float search_radius);
+
+      void
+      setMinNumPoints (int min_num_points);
+
+      void
+      setIdentityThresholds(float position, float radius, float angle);
 
       void esimate(std::vector<CCNFeature> & ccn_feature_list);
 
@@ -42,9 +49,17 @@ namespace radi
       getMinNumPoints ();
 
     private:
-      PointCloudConstPtr point_cloud_;
-      float min_radius_;
-      float min_num_points_;
+      PointCloudConstPtr point_cloud_;    /*!< Input point cloud. */
+      float min_radius_;    /*!< Minimum radius of the 3D cricle. */
+      float max_radius_;    /*!< Maximum radius of the 3D cricle. */
+      float search_radius_;     /*!< Search radius during SacSegmentation. */
+      int min_num_points_;      /*!< Minimum number of points on one circle. */
+      float threshold_position_;    /*!< Threshold of position error which is used to detect whether 2 circles are identical. */
+      float threshold_radius_;    /*!< Threshold of position error which is used to detect whether 2 circles are identical. */
+      float threshold_angle_;   /*!< Threshold of normal error which is used to detect whether 2 circles are identical. */
+
+      bool
+      isInCircleList(const pcl::ModelCoefficients & coefficients, const std::vector<pcl::ModelCoefficients> & circle_list);
   };
 
 } // namespace radi

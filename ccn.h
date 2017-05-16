@@ -24,15 +24,22 @@ namespace radi
       void
       setNormal(const Eigen::Vector3f & normal);
 
+      void
+      setRadius(float radius);
+
       const Eigen::Vector3f &
       getCenter() const;
 
       const Eigen::Vector3f &
       getNormal () const;
 
+      float
+      getRadius () const;
+
     private:
       Eigen::Vector3f center_;
       Eigen::Vector3f normal_;
+      float radius_;
   };
 
   void
