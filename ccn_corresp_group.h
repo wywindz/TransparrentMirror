@@ -54,11 +54,10 @@ namespace radi
       recognize (std::vector<Eigen::Matrix4f> & transf_list);
 
       void
-      recognize (std::vector<Eigen::Matrix4f> & transf_list,
-                 std::vector<pcl::Correspondence> & feature_corresp_list);
+      recognize (std::vector<Eigen::Matrix4f> & transf_list, std::vector<pcl::Correspondence> & feature_corresp_list);
 
     private:
-      PointCloudConstPtr point_cloud_;    /*!< Input point cloud. */
+      PointCloudConstPtr point_cloud_;    /*!<! Input point cloud. */
       const std::vector<CCNFeature> * model_features_;    /*<! Model feature list. */
       const std::vector<CCNFeature> * scene_features_;    /*<! Point cloud feature list. */
       float radius_variation_;    /*<! Variation of radius which is used to pair 2 features. */

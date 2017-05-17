@@ -103,7 +103,7 @@ namespace radi
         std::vector<std::size_t> order_indices(3);
         std::iota(order_indices.begin (), order_indices.end (), 0);
         std::sort(order_indices.begin(), order_indices.end(),
-                  [&eigen_values](int idx_1, int idx_2){ return eigen_values[idx_1] < eigen_values[idx_2]; });
+                  [&eigen_values](int idx_1, int idx_2){ return eigen_values[idx_1] <= eigen_values[idx_2]; });
         float lambda_0 = eigen_values[order_indices[0]];
         float lambda_1 = eigen_values[order_indices[1]];
         float lambda_2 = eigen_values[order_indices[2]];
@@ -164,7 +164,7 @@ namespace radi
         std::vector<std::size_t> order_edge (queue.size ());
         std::iota (order_edge.begin (), order_edge.end (), 0);
         std::sort(order_edge.begin(), order_edge.end(),
-                  [&queue_weights](int idx_1, int idx_2){ return queue_weights[idx_1] < queue_weights[idx_2]; });
+                  [&queue_weights](int idx_1, int idx_2){ return queue_weights[idx_1] <= queue_weights[idx_2]; });
 
         edge_point_indices.push_back(queue[order_edge[0]][0]);
         edge_point_indices.push_back(queue[order_edge[0]][1]);

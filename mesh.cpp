@@ -15,15 +15,15 @@ namespace radi
 
   // Load '.stl' file.
   void
-  Mesh::loadModel (const std::string & filePath)
+  Mesh::loadModel (const std::string & file_path)
   {
-    QFile fileModel (QString::fromStdString(filePath));
-    if (!fileModel.open (QIODevice::ReadOnly | QIODevice::Text))
+    QFile file_model (QString::fromStdString(file_path));
+    if (!file_model.open (QIODevice::ReadOnly | QIODevice::Text))
     {
-      std::cerr << "Cannot open file: " + filePath + "." << std::endl;
+      std::cerr << "Cannot open file: " + file_path + "." << std::endl;
     }
 
-    QTextStream inStream (&fileModel);
+    QTextStream inStream (&file_model);
     while (!inStream.atEnd ())
     {
       QString line = inStream.readLine ().trimmed ();
@@ -51,7 +51,7 @@ namespace radi
   const std::vector<Eigen::Vector3f> &
   Mesh::getTriangle (std::size_t index) const
   {
-      return triangles_[index];
+      return (triangles_[index]);
   }
 
 } // namespace radi

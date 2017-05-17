@@ -19,9 +19,9 @@ namespace radi
       ~Mesh ();
 
       void
-      loadModel (const std::string & filePath);
+      loadModel (const std::string & file_path);
 
-      inline std::size_t
+      inline int
       getNumTriangles () const { return triangles_.size(); }
 
       const std::vector<Eigen::Vector3f> &

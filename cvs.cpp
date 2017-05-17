@@ -80,7 +80,7 @@ namespace radi
     std::vector<std::size_t> order_indices(angle_plane_list.size());
     std::iota(order_indices.begin (), order_indices.end (), 0);
     std::sort(order_indices.begin(), order_indices.end(),
-              [&angle_plane_list](int idx_1, int idx_2){ return angle_plane_list[idx_1] < angle_plane_list[idx_2]; });
+              [&angle_plane_list](int idx_1, int idx_2){ return angle_plane_list[idx_1] <= angle_plane_list[idx_2]; });
 
     for (std::size_t i = 0; i < order_indices.size()-1; ++i)
     {

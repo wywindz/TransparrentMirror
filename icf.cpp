@@ -22,7 +22,7 @@ namespace radi
     iteration_inner_ = 20;
     has_converged = false;
     threshold_distance_near_ = 0.03;
-    threshold_distance_extreme_ = 0.5;
+    threshold_distance_extreme_ = 0.1;
     threshold_valid_ = 0.4;
     init_transf_ = Eigen::MatrixXf::Identity (4,4);
   }
@@ -138,6 +138,9 @@ namespace radi
   float
   IterativeClosestFace::calObjectiveValue (const Eigen::Matrix4f & mat_transf)
   {
+
+    std::cout << "Number of triangles: " << this->model_mesh_.getNumTriangles() << std::endl;
+
     std::cout << "Matrix transf: \n" << mat_transf << std::endl;
     pcl::PointCloud<pcl::PointXYZ>::Ptr transformed_scene (new pcl::PointCloud<pcl::PointXYZ> ());
     // pcl::transformPointCloud(*scene_point_cloud_, transformed_scene, mat_transf);
@@ -179,19 +182,19 @@ namespace radi
     pcl::transformPointCloud(*scene_point_cloud_, *transformed_scene, mat_transf_total);
     // pcl::transformPointCloud(*scene_point_cloud_, transformed_scene, inv_mat_transf);
 
-    // Show 3d model and transformed point cloud.
-    pcl::PolygonMesh mesh;
-    // pcl::io::loadPolygonFileSTL("Models/cuboid.stl", mesh);
-    pcl::io::loadPolygonFileSTL(model_file_, mesh);
-    pcl::visualization::PCLVisualizer viewer ("Model & Point Cloud");
-    viewer.addPolygonMesh(mesh);
-    viewer.addPointCloud<pcl::PointXYZ> (transformed_scene, "Transformed point cloud");
-    while (!viewer.wasStopped ())
-    {
-      viewer.spinOnce ();
-    }
+    // // Show 3d model and transformed point cloud.
+    // pcl::PolygonMesh mesh;
+    // // pcl::io::loadPolygonFileSTL("Models/cuboid.stl", mesh);
+    // pcl::io::loadPolygonFileSTL(model_file_, mesh);
+    // pcl::visualization::PCLVisualizer viewer ("Model & Point Cloud");
+    // viewer.addPolygonMesh(mesh);
+    // viewer.addPointCloud<pcl::PointXYZ> (transformed_scene, "Transformed point cloud");
+    // while (!viewer.wasStopped ())
+    // {
+    //   viewer.spinOnce ();
+    // }
 
-    throw "Too large distance.";
+    // throw "Too large distance.";
 
     float objective_value = 0.0;
     for (std::size_t i = 0; i < (*transformed_scene).points.size(); ++i)
@@ -284,7 +287,7 @@ namespace radi
       std::vector<std::size_t> order_indices (iteration_inner_);
       std::iota(order_indices.begin (), order_indices.end (), 0);
       std::sort(order_indices.begin (), order_indices.end (), [&objective_value_list](int idx_1, int idx_2)
-              { return objective_value_list[idx_1] > objective_value_list[idx_2]; });
+              { return objective_value_list[idx_1] >= objective_value_list[idx_2]; });
 
       if (objective_value_list[order_indices[0]] > objective_value)
       {
