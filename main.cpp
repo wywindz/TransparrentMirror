@@ -173,7 +173,7 @@ int main ()
 
   std::vector<radi::CCNFeature> ccn_features (1);
   radi::CCNFeature ccn_feature;
-  Eigen::Vector3f center (0.0, 0.0, 0.15);
+  Eigen::Vector3f center (0.0, 0.0, 0.18);
   Eigen::Vector3f normal (0.0, 0.0, 1.0);
   ccn_feature.setCenter(center);
   ccn_feature.setNormal(normal);

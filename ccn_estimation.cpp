@@ -75,7 +75,7 @@ namespace radi
     sac_segment.setMethodType(pcl::SAC_RANSAC);
     sac_segment.setMaxIterations(1000);
     sac_segment.setRadiusLimits(min_radius_, max_radius_);
-    sac_segment.setDistanceThreshold(0.01);
+    sac_segment.setDistanceThreshold(0.005);
 
     std::vector<pcl::ModelCoefficients> circle_list;
     while (board_point_indices.size () > min_num_points_)
@@ -84,9 +84,9 @@ namespace radi
       pcl::PointIndices::Ptr inliers (new pcl::PointIndices);
       sac_segment.setIndices(boost::make_shared<std::vector<int> >(board_point_indices));
 
-      pcl::search::KdTree<pcl::PointXYZ>::Ptr search (new pcl::search::KdTree<pcl::PointXYZ>);
-      search->setInputCloud(this->point_cloud_);
-      sac_segment.setSamplesMaxDist(search_radius_, search);
+      // pcl::search::KdTree<pcl::PointXYZ>::Ptr search (new pcl::search::KdTree<pcl::PointXYZ>);
+      // search->setInputCloud(this->point_cloud_);
+      // sac_segment.setSamplesMaxDist(search_radius_, search);
 
       sac_segment.segment(*inliers, *coefficients);
 

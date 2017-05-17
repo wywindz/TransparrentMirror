@@ -7,7 +7,7 @@
 
 namespace radi
 {
-  CCNCorrespGroup::CCNCorrespGroup () : radius_variation_(0.1), resolution_(0.5)
+  CCNCorrespGroup::CCNCorrespGroup () : radius_variation_(0.3), resolution_(3.14)
   { }
 
   CCNCorrespGroup::~CCNCorrespGroup ()
@@ -76,6 +76,9 @@ namespace radi
             Eigen::Affine3f affine_transf_scene_new = affine_transf_scene
                 * Eigen::AngleAxisf(float(idx_roation)*resolution_, ccn_scene.getNormal ());
             Eigen::Affine3f transformation = affine_transf_model * affine_transf_scene_new.inverse();
+
+            std::cout << "Transform normal of the scene: " << transformation.rotation()*ccn_scene.getNormal() << std::endl;
+            std::cout << "Transform center of the scene: " << transformation.rotation()*ccn_scene.getCenter() + transformation.translation() << std::endl;
 
             // Perform ICF algorithm. Refine the tramsformations.
             IterativeClosestFace icf;

@@ -369,12 +369,13 @@ namespace radi
     mat_camera(2,1) = 0.0;
     mat_camera(2,2) = 0.3752;
 
-    mat_camera(0,3) = 2.5;
-    mat_camera(1,3) = 0.0;
-    mat_camera(2,3) = 1.0;
+    // mat_camera(0,3) = 2.5;
+    // mat_camera(1,3) = 0.0;
+    // mat_camera(2,3) = 1.0;
 
     // Eigen::Matrix4f mat_transf_total = mat_camera * mat_transf.inverse();
-    Eigen::Matrix4f mat_transf_total = mat_transf;
+    // Eigen::Matrix4f mat_transf_total = mat_transf;
+    Eigen::Matrix4f mat_transf_total = Eigen::Matrix4Xf::Identity(4,4);
     // Eigen::Matrix4f inv_mat_transf = mat_transf.inverse ();
     pcl::transformPointCloud(*scene_point_cloud_, *transformed_scene, mat_transf_total);
     // pcl::transformPointCloud(*scene_point_cloud_, transformed_scene, inv_mat_transf);
