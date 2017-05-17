@@ -9,33 +9,32 @@
 
 namespace radi
 {
-  CCNFeature::CCNFeature ()
-          : center_(), normal_()
+  CCNFeature::CCNFeature () : center_(), normal_()
   { }
 
   CCNFeature::~CCNFeature ()
   { }
 
   void
-  CCNFeature::setCenter(const Eigen::Vector3f & center)
+  CCNFeature::setCenter (const Eigen::Vector3f & center)
   {
     center_ = center;
   }
 
   void
-  CCNFeature::setNormal(const Eigen::Vector3f & normal)
+  CCNFeature::setNormal (const Eigen::Vector3f & normal)
   {
     normal_ = normal;
   }
 
   void
-  CCNFeature::setRadius(float radius)
+  CCNFeature::setRadius (float radius)
   {
     radius_ = radius;
   }
 
   const Eigen::Vector3f &
-  CCNFeature::getCenter() const
+  CCNFeature::getCenter () const
   {
     return (center_);
   }
@@ -53,16 +52,15 @@ namespace radi
   }
 
   void
-  transformCCNFeature (const Eigen::Matrix4f & mat_transf,
-          const CCNFeature & source_feature, CCNFeature & target_feature)
+  transformCCNFeature (const Eigen::Matrix4f & mat_transf, const CCNFeature & source_feature, CCNFeature & target_feature)
   {
-    const Eigen::Vector3f & center = source_feature.getCenter();
-    const Eigen::Vector3f & normal = source_feature.getNormal();
-    Eigen::Vector3f center_transformed = mat_transf.block(0,0,3,3)*center + mat_transf.block(0,3,3,1);
-    Eigen::Vector3f normal_transformed = mat_transf.block(0,0,3,3)*normal;
-    target_feature.setCenter(center_transformed);
-    target_feature.setNormal(normal_transformed);
-    target_feature.setRadius(source_feature.getRadius ());
+    const Eigen::Vector3f & center = source_feature.getCenter ();
+    const Eigen::Vector3f & normal = source_feature.getNormal ();
+    Eigen::Vector3f center_transformed = mat_transf.block (0,0,3,3)*center + mat_transf.block (0,3,3,1);
+    Eigen::Vector3f normal_transformed = mat_transf.block (0,0,3,3)*normal;
+    target_feature.setCenter (center_transformed);
+    target_feature.setNormal (normal_transformed);
+    target_feature.setRadius (source_feature.getRadius ());
   }
 
 } // namespace radi

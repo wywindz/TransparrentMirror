@@ -19,16 +19,16 @@ namespace radi
       ~CCNFeature ();
 
       void
-      setCenter(const Eigen::Vector3f & center);
+      setCenter (const Eigen::Vector3f & center);
 
       void
-      setNormal(const Eigen::Vector3f & normal);
+      setNormal (const Eigen::Vector3f & normal);
 
       void
-      setRadius(float radius);
+      setRadius (float radius);
 
       const Eigen::Vector3f &
-      getCenter() const;
+      getCenter () const;
 
       const Eigen::Vector3f &
       getNormal () const;
@@ -43,8 +43,7 @@ namespace radi
   };
 
   void
-  transformCCNFeature (const Eigen::Matrix4f & mat_transf,
-          const CCNFeature & source_feature, CCNFeature & target_feature);
+  transformCCNFeature (const Eigen::Matrix4f & mat_transf, const CCNFeature & source_feature, CCNFeature & target_feature);
 
 } // namespace radi
 

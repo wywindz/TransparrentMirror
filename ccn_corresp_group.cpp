@@ -7,7 +7,7 @@
 
 namespace radi
 {
-  CCNCorrespGroup::CCNCorrespGroup () : radius_variation_(0.3), resolution_(3.14)
+  CCNCorrespGroup::CCNCorrespGroup () : radius_variation_(0.3), resolution_(0.5)
   { }
 
   CCNCorrespGroup::~CCNCorrespGroup ()

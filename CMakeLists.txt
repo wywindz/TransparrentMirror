@@ -31,8 +31,7 @@ set(SRC_LIST
     ccn_estimation.cpp
     ccn_corresp_group.cpp
     icf.cpp
-    mesh.cpp 
-    pose.cpp)
+    mesh.cpp)
 
 add_executable(transparent_mirror ${SRC_LIST})
 target_link_libraries(transparent_mirror ${PCL_LIBRARIES})

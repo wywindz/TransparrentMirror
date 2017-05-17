@@ -11,41 +11,31 @@
 #include <eigen3/Eigen/Dense>
 
 #include "mesh.h"
-#include "pose.h"
 
 namespace radi
 {
   class IterativeClosestFace
   {
     public:
-
       // typedefs
       typedef pcl::PointCloud<pcl::PointXYZ> PointCloud;
       typedef boost::shared_ptr<const PointCloud> PointCloudConstPtr;
 
-
       IterativeClosestFace ();
-      IterativeClosestFace (const std::string & model_file_path,
-                           PointCloudConstPtr scene_point_cloud);
+      IterativeClosestFace (const std::string & model_file_path, const PointCloudConstPtr & scene_point_cloud);
       ~IterativeClosestFace ();
 
       void
       setReferenceModel (const std::string & model_file_path);
 
       void
-      setScenePointCloud (PointCloudConstPtr scene_point_cloud);
+      setScenePointCloud (const PointCloudConstPtr & scene_point_cloud);
 
       void
-      setMinRangeTranslation (const Eigen::Vector3f & min_range);
+      setVariationTranslation (const Eigen::Vector3f & left_board, const Eigen::Vector3f & right_board);
 
       void
-      setMaxRangeTranslation (const Eigen::Vector3f & max_range);
-
-      void
-      setMinRangeRotation (const Eigen::Vector3f & min_range);
-
-      void
-      setMaxRangeRotation (const Eigen::Vector3f & max_range);
+      setVariationRotation (const Eigen::Vector3f & left_board, const Eigen::Vector3f & right_board);
 
       void
       setIterationOuter (std::size_t iteration_outer);
@@ -56,23 +46,20 @@ namespace radi
       void
       setInitialTransformation (const Eigen::Matrix4f & init_transf);
 
+      void
+      setThresholds (float near, float extreme, float valid);
+
       const Mesh &
       getReferenceModel () const;
 
       PointCloudConstPtr
       getScenePointCloud () const;
 
-      const Eigen::Vector3f
-      getMinRangeTranslation ();
+      void
+      getVariationTranslation (Eigen::Vector3f & left_board, Eigen::Vector3f & right_board);
 
-      const Eigen::Vector3f
-      getMaxRangeTranslation ();
-
-      const Eigen::Vector3f
-      getMinRangeRotation ();
-
-      const Eigen::Vector3f
-      getMaxRangeRotation ();
+      void
+      getVariationRotation (Eigen::Vector3f & left_board, Eigen::Vector3f & right_board);
 
       std::size_t
       getIterationOuter ();
@@ -83,19 +70,23 @@ namespace radi
       const Eigen::Matrix4f
       getInitialTransformation ();
 
+      float
+      calObjectiveValue (const Eigen::Matrix4f & mat_transf);
+
       void
       estimate (Eigen::Matrix4f & estimated_transf);
 
-      float
-      objectiveValue ();
+      bool
+      hasConverged ();
 
     private:
+      std::string model_file_;
       Mesh model_mesh_;
       PointCloudConstPtr scene_point_cloud_;
-      Eigen::Vector3f min_range_translation_;
-      Eigen::Vector3f max_range_translation_;
-      Eigen::Vector3f min_range_rotation_;
-      Eigen::Vector3f max_range_rotation_;
+      Eigen::Vector3f left_board_translation_;
+      Eigen::Vector3f right_board_translation_;
+      Eigen::Vector3f left_board_rotation_;
+      Eigen::Vector3f right_board_rotation_;
       std::size_t iteration_outer_;
       std::size_t iteration_inner_;
       Eigen::Matrix4f init_transf_;
@@ -103,19 +94,39 @@ namespace radi
       float threshold_distance_extreme_;
       float threshold_valid_;
       bool has_converged;
-      Pose relativePose;
 
-      float
-      calObjectiveValue (const Eigen::Matrix4f & mat_transf);
   }; // class IterativeClosestFace
 
-  Eigen::Vector3f uniformRandom(const Eigen::Vector3f & min_boundary, const Eigen::Vector3f & max_boundary);
-  Eigen::Vector3f gaussianRandom(const Eigen::Vector3f & mean, const Eigen::Vector3f & deviation);
-  Eigen::Vector3f gaussianRandom(const Eigen::Vector3f & mean, float deviation);
+  Eigen::Vector3f
+  uniformRandom(const Eigen::Vector3f & min_boundary, const Eigen::Vector3f & max_boundary);
+  Eigen::Vector3f
+  gaussianRandom(const Eigen::Vector3f & mean, const Eigen::Vector3f & deviation);
+  Eigen::Vector3f
+  gaussianRandom(const Eigen::Vector3f & mean, float deviation);
 
-  const Eigen::Vector3f matrix2euler (const Eigen::Matrix3f & mat_rotation);
-  const Eigen::Matrix3f euler2matrix (const Eigen::Vector3f & euler_angle);
+  const Eigen::Vector3f
+  matrix2euler (const Eigen::Matrix3f & mat_rotation);
+  const Eigen::Matrix3f
+  euler2matrix (const Eigen::Vector3f & euler_angle);
 
+  // Calculate the distance from a point to a triangle mesh.
+  float
+  distPointTriangle (const Eigen::Vector3f & point, const std::vector<Eigen::Vector3f> & triangle_vertices);
+  // Calculate the projected point on a plane.
+  Eigen::Vector3f
+  pointProjectionOnPlane (const Eigen::Vector3f & point, const std::vector<Eigen::Vector3f> & triangle_vertices);
+  // Detect if the projection of a point is inside the triangle.
+  bool
+  isPointInTriangle (const Eigen::Vector3f & point, const std::vector<Eigen::Vector3f> & triangle_vertices);
+  // Calculate the distance from a point to another point.
+  float
+  distPointPoint (const Eigen::Vector3f & point_a, const Eigen::Vector3f & point_b);
+  // Calculate the distance from a point to a line segment.
+  float
+  distPointLineSegment (const Eigen::Vector3f & point, const std::vector<Eigen::Vector3f> & segment_vertices);
+  // Calculate the distance from a point to a plane.
+  float
+  distPointPlane (const Eigen::Vector3f & point, const std::vector<Eigen::Vector3f> & triangle_vertices);
 
 } // namespace radi
 
