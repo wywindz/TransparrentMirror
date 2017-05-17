@@ -173,12 +173,12 @@ int main ()
 
   std::vector<radi::CCNFeature> ccn_features (1);
   radi::CCNFeature ccn_feature;
-  Eigen::Vector3f center (1.0, 0.0, 0.0);
+  Eigen::Vector3f center (0.0, 0.0, 0.15);
   Eigen::Vector3f normal (0.0, 0.0, 1.0);
   ccn_feature.setCenter(center);
   ccn_feature.setNormal(normal);
   ccn_feature.setRadius(0.17);
-  transformCCNFeature(mat_camera_ccn.inverse(), ccn_feature, ccn_features[0]);
+  transformCCNFeature(Eigen::Matrix4Xf::Identity(4,4), ccn_feature, ccn_features[0]);
 
   // std::cout << "Position of corner-7: " << pos_corner_7_camera[0] << " "
   //           << pos_corner_7_camera[1] << " " << pos_corner_7_camera[2] << std::endl;

@@ -373,7 +373,8 @@ namespace radi
     mat_camera(1,3) = 0.0;
     mat_camera(2,3) = 1.0;
 
-    Eigen::Matrix4f mat_transf_total = mat_camera * mat_transf.inverse();
+    // Eigen::Matrix4f mat_transf_total = mat_camera * mat_transf.inverse();
+    Eigen::Matrix4f mat_transf_total = mat_transf;
     // Eigen::Matrix4f inv_mat_transf = mat_transf.inverse ();
     pcl::transformPointCloud(*scene_point_cloud_, *transformed_scene, mat_transf_total);
     // pcl::transformPointCloud(*scene_point_cloud_, transformed_scene, inv_mat_transf);
@@ -389,6 +390,8 @@ namespace radi
     {
       viewer.spinOnce();
     }
+
+    throw "Too large distance.";
 
     float objective_value = 0.0;
     for (std::size_t i = 0; i < (*transformed_scene).points.size(); ++i)

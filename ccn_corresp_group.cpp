@@ -65,7 +65,8 @@ namespace radi
               * Eigen::AngleAxisf(theta_scene, axis_scene);
 
           float theta_model = std::acos (ccn_model.getNormal().dot(Eigen::Vector3f(0.0, 0.0, 1.0)));
-          Eigen::Vector3f axis_model = ccn_model.getNormal().cross(Eigen::Vector3f(0.0, 0.0, 1.0));
+          // Eigen::Vector3f axis_model = ccn_model.getNormal().cross(Eigen::Vector3f(0.0, 0.0, 1.0));
+          Eigen::Vector3f axis_model = Eigen::Vector3f(1.0, 0.0, 0.0);
           Eigen::Affine3f affine_transf_model = Eigen::Translation3f(ccn_model.getCenter())
               * Eigen::AngleAxisf(theta_model, axis_model);
 
@@ -73,7 +74,7 @@ namespace radi
           for (int idx_roation = 0; idx_roation <= num_rotation; ++idx_roation)
           {
             Eigen::Affine3f affine_transf_scene_new = affine_transf_scene
-                * Eigen::AngleAxisf(float(idx_roation)*resolution_, axis_scene);
+                * Eigen::AngleAxisf(float(idx_roation)*resolution_, ccn_scene.getNormal ());
             Eigen::Affine3f transformation = affine_transf_model * affine_transf_scene_new.inverse();
 
             // Perform ICF algorithm. Refine the tramsformations.
