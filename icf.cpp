@@ -2,6 +2,7 @@
 #include <random>
 #include <exception>
 
+#include <pcl/filters/extract_indices.h>
 #include <pcl/common/transforms.h>
 #include <pcl/PolygonMesh.h>
 #include <pcl/io/vtk_lib_io.h>
@@ -20,7 +21,7 @@ namespace radi
     right_board_rotation_ = Eigen::Vector3f (3.1415926, 3.1415926, 3.1415926);
     iteration_outer_ = 50;
     iteration_inner_ = 20;
-    has_converged = false;
+    use_indices_ = false;
     threshold_distance_near_ = 0.03;
     threshold_distance_extreme_ = 0.1;
     threshold_valid_ = 0.4;
@@ -33,6 +34,7 @@ namespace radi
     model_file_ = model_file_path;
     model_mesh_.loadModel (model_file_path);
     scene_point_cloud_ = scene_point_cloud;
+    point_cloud_used_ = scene_point_cloud_;
   }
 
   IterativeClosestFace::~IterativeClosestFace ()
@@ -49,12 +51,29 @@ namespace radi
   IterativeClosestFace::setScenePointCloud (const PointCloudConstPtr & scene_point_cloud)
   {
     scene_point_cloud_ = scene_point_cloud;
+    point_cloud_used_ = scene_point_cloud_;
+  }
+
+  void
+  IterativeClosestFace::setIndices ()
+  {
+    indices_ = NULL;
+    use_indices_ = false;
+    point_cloud_used_ = scene_point_cloud_;
   }
 
   void
   IterativeClosestFace::setIndices (const IndicesConstPtr & indices)
   {
     indices_ = indices;
+    use_indices_ = true;
+    IterativeClosestFace::PointCloud::Ptr point_cloud (new IterativeClosestFace::PointCloud ());
+    pcl::ExtractIndices<pcl::PointXYZ> extractor;
+    extractor.setInputCloud (scene_point_cloud_);
+    extractor.setIndices (indices_);
+    extractor.filter (*point_cloud);
+
+    point_cloud_used_ = point_cloud;
   }
 
   void
@@ -72,13 +91,13 @@ namespace radi
   }
 
   void
-  IterativeClosestFace::setIterationOuter (std::size_t iteration_outer)
+  IterativeClosestFace::setIterationOuter (int iteration_outer)
   {
     iteration_outer_ = iteration_outer;
   }
 
   void
-  IterativeClosestFace::setIterationInner (std::size_t iteration_inner)
+  IterativeClosestFace::setIterationInner (int iteration_inner)
   {
     iteration_inner_ = iteration_inner;
   }
@@ -123,13 +142,13 @@ namespace radi
     right_board = right_board_rotation_;
   }
 
-  std::size_t
+  int
   IterativeClosestFace::getIterationOuter ()
   {
     return (iteration_outer_);
   }
 
-  std::size_t
+  int
   IterativeClosestFace::getIterationInner ()
   {
     return (iteration_inner_);
@@ -144,63 +163,9 @@ namespace radi
   float
   IterativeClosestFace::calObjectiveValue (const Eigen::Matrix4f & mat_transf)
   {
-
-    std::cout << "Number of triangles: " << this->model_mesh_.getNumTriangles() << std::endl;
-
-    std::cout << "Matrix transf: \n" << mat_transf << std::endl;
+    // std::cout << "Number of triangles: " << this->model_mesh_.getNumTriangles() << std::endl;
     pcl::PointCloud<pcl::PointXYZ>::Ptr transformed_scene (new pcl::PointCloud<pcl::PointXYZ> ());
-    // pcl::transformPointCloud(*scene_point_cloud_, transformed_scene, mat_transf);
-    Eigen::Matrix4f mat_camera = Eigen::Matrix4Xf::Identity(4,4);
-
-    // Cuboid.
-    // mat_camera(0,0) = 0.7071;
-    // mat_camera(0,1) = -0.5;
-    // mat_camera(0,2) = 0.5;
-    // mat_camera(1,0) = 0.7071;
-    // mat_camera(1,1) = 0.5;
-    // mat_camera(1,2) = -0.5;
-    // mat_camera(2,0) = 0.0;
-    // mat_camera(2,1) = 0.7071;
-    // mat_camera(2,2) = 0.7071;
-
-    // mat_camera(0,3) = 2.0;
-    // mat_camera(1,3) = -2.0;
-    // mat_camera(2,3) = 2.0;
-
-    // Cup
-    mat_camera(0,0) = 0.0;
-    mat_camera(0,1) = 1.0;
-    mat_camera(0,2) = 0.0;
-    mat_camera(1,0) = -0.3752;
-    mat_camera(1,1) = 0.0;
-    mat_camera(1,2) = 0.927;
-    mat_camera(2,0) = 0.927;
-    mat_camera(2,1) = 0.0;
-    mat_camera(2,2) = 0.3752;
-
-    // mat_camera(0,3) = 2.5;
-    // mat_camera(1,3) = 0.0;
-    // mat_camera(2,3) = 1.0;
-
-    // Eigen::Matrix4f mat_transf_total = mat_camera * mat_transf.inverse();
-    Eigen::Matrix4f mat_transf_total = mat_transf;
-    // Eigen::Matrix4f inv_mat_transf = mat_transf.inverse ();
-    pcl::transformPointCloud(*scene_point_cloud_, *transformed_scene, mat_transf_total);
-    // pcl::transformPointCloud(*scene_point_cloud_, transformed_scene, inv_mat_transf);
-
-    // // Show 3d model and transformed point cloud.
-    // pcl::PolygonMesh mesh;
-    // // pcl::io::loadPolygonFileSTL("Models/cuboid.stl", mesh);
-    // pcl::io::loadPolygonFileSTL(model_file_, mesh);
-    // pcl::visualization::PCLVisualizer viewer ("Model & Point Cloud");
-    // viewer.addPolygonMesh(mesh);
-    // viewer.addPointCloud<pcl::PointXYZ> (transformed_scene, "Transformed point cloud");
-    // while (!viewer.wasStopped ())
-    // {
-    //   viewer.spinOnce ();
-    // }
-
-    // throw "Too large distance.";
+    pcl::transformPointCloud(*point_cloud_used_, *transformed_scene, mat_transf);
 
     float objective_value = 0.0;
     for (std::size_t i = 0; i < (*transformed_scene).points.size(); ++i)
@@ -218,30 +183,21 @@ namespace radi
 
       if (shortest_distance > threshold_distance_extreme_)
       {
-        // ToDo: Throw an exception.
         std::cout << "Shortest distance: " << shortest_distance << std::endl;
         throw "Too large distance.";
       }
 
       float gpx;
       if (shortest_distance < threshold_distance_near_)
-      {
         gpx = shortest_distance;
-      }
       else
-      {
           gpx = 4.0 * shortest_distance;
-      }
 
       float fxp;
       if (gpx < threshold_valid_)
-      {
           fxp = 1.0 - gpx/threshold_valid_;
-      }
       else
-      {
           fxp = 0.0;
-      }
 
       objective_value += fxp;
     }
@@ -305,176 +261,44 @@ namespace radi
     estimated_transf = mat_transf;
   }
 
-  // // Pose estimation.
-  // void
-  // IterativeClosestFace::estimate (Eigen::Matrix4f & matrix)
-  // {
-  //   Eigen::Vector3f meanTranslation = uniformRandom(minBoundaryTranslation, maxBoundaryTranslation);
-  //   Pose bestTranslation = generatePose(meanTranslation);
-  //   bestTranslation.objectiveValue(this->modelMesh, this->scenePointCloud);
-  //   std::vector<Pose> bestTranslationList;
-  //   std::size_t indexOuter = 0;
-  //   bool hasReachedMaximaOnTranslation = false;
-  //   std::size_t countRepeationOnTranslation = 0;
-  //   while (indexOuter < iterationOuter)
-  //   {
-  //     std::cout << "Outer iteration: " << indexOuter << std::endl;
-  //     // Decrease or increase the standard deviation of sampling the translation.
-  //     // ToDo: Add boundaries for the deviations.
-  //     if (hasReachedMaximaOnTranslation)
-  //     {
-  //       // Increase the standard deviation in order to jump out of the local maxima.
-  //       deviationTranslation[0] += 20.0;
-  //       deviationTranslation[1] += 20.0;
-  //       deviationTranslation[2] += 20.0;
-  //       // Resample the mean translation again.
-  //       meanTranslation = uniformRandom(minBoundaryTranslation, maxBoundaryTranslation);
-  //       // Set the flag to false.
-  //       hasReachedMaximaOnTranslation = false;
-  //     }
-  //     else
-  //     {
-  //       // Descrease the standard deviation.
-  //       deviationTranslation[0] -= 10.0;
-  //       deviationTranslation[1] -= 10.0;
-  //       deviationTranslation[2] -= 10.0;
-  //     }
-  //     Eigen::Vector3f sampledTranslation = gaussianRandom(meanTranslation, deviationTranslation);
-  //     Pose sampledPose = generatePose(sampledTranslation);
-  //     if (sampledPose.objectiveValue(modelMesh, scenePointCloud) < bestTranslation.objectiveValue())
-  //     {
-  //       bestTranslation = sampledPose;
-  //     }
-
-  //     // Sample the rotation under the current sampled translation.
-  //     Eigen::Vector3f meanZyzEuler = uniformRandom(minBoundaryRotation, maxBoundaryRotation);
-  //     Pose bestRotation = generatePose(bestTranslation.translation(), meanZyzEuler);
-  //     bestRotation.objectiveValue(this->modelMesh, this->scenePointCloud);
-  //     std::vector<Pose> bestRotationList;
-  //     std::size_t indexMedium = 0;
-  //     bool hasReachedMaximaOnRotation = false;
-  //     std::size_t countRepeationOnRotation = 0;
-  //     while (indexMedium < iterationMedium)
-  //     {
-  //       std::cout << "Medium iteration: " << indexMedium << std::endl;
-  //       // Decrease or increase the standard deviation of sampling the rotation.
-  //       if (hasReachedMaximaOnRotation) {
-  //           // Increase the standard deviation in order to jump out of the local maxima.
-  //           deviationRotation[0] += 20.0 * 3.1415926/180.0;
-  //           deviationRotation[1] += 20.0 * 3.1415926/180.0;
-  //           deviationRotation[2] += 20.0 * 3.1415926/180.0;
-  //           // Resample the mean rotation again.
-  //           meanZyzEuler = uniformRandom(minBoundaryRotation, maxBoundaryRotation);
-  //           // Set the flag to false.
-  //           hasReachedMaximaOnRotation = false;
-  //       } else {
-  //           // Descrease the standard deviation.
-  //           deviationRotation[0] -= 10.0 * 3.1415926/180.0;
-  //           deviationRotation[1] -= 10.0 * 3.1415926/180.0;
-  //           deviationRotation[2] -= 10.0 * 3.1415926/180.0;
-  //       }
-  //       // Sample 'iterationInner' poses under the current sampled translation and rotation.
-  //       std::vector<Pose> poseInnerList(iterationInner);
-  //       std::size_t indexInner = 0;
-  //       while (indexInner < iterationInner) {
-  //           Eigen::Vector3f sampledRotation = gaussianRandom(meanZyzEuler, deviationRotation);
-  //           poseInnerList[indexInner] = generatePose(sampledTranslation, sampledRotation);
-  //           indexInner++;
-  //       }
-
-  //       Pose bestPoseInner = findBestPose(poseInnerList, modelMesh, scenePointCloud);
-  //       if (bestRotation.objectiveValue() <= bestPoseInner.objectiveValue()) {
-  //           countRepeationOnRotation++;
-  //           if (countRepeationOnRotation >= 3) {
-  //               hasReachedMaximaOnRotation = true;
-  //               bestRotationList.push_back(bestRotation);
-  //               countRepeationOnRotation = 0;
-  //           }
-  //       } else {
-  //           bestRotation = bestPoseInner;
-  //           meanZyzEuler = bestRotation.zyzEuler();
-  //           countRepeationOnRotation = 0;
-  //       }
-
-  //       std::cout << "Objective value: " << bestRotation.objectiveValue() << std::endl;
-  //       std::cout << bestRotation.translation()[0] << "  "
-  //               << bestRotation.translation()[1] << "  " << bestRotation.translation()[2] << std::endl;
-  //       std::cout << bestRotation.zyzEuler()[0] << "  "
-  //               << bestRotation.zyzEuler()[1] << "  " << bestRotation.zyzEuler()[2] << std::endl;
-
-
-  //       indexMedium++;
-  //     }
-
-  //     // Best pose at k-step iteration.
-  //     Pose bestPoseMedium = findBestPose(bestRotationList);
-  //     if (bestTranslation.objectiveValue() <= bestPoseMedium.objectiveValue()) {
-  //         countRepeationOnTranslation++;
-  //         if (countRepeationOnTranslation >= 3) {
-  //             hasReachedMaximaOnTranslation = true;
-  //             bestTranslationList.push_back(bestTranslation);
-  //             countRepeationOnTranslation = 0;
-  //         }
-  //     } else {
-  //         bestTranslation = bestPoseMedium;
-  //         meanTranslation = bestTranslation.translation();
-  //         countRepeationOnTranslation = 0;
-  //     }
-
-  //     indexOuter++;
-  //   }
-
-  //   // Find the best pose from the local maximas.
-  //   Pose bestPose = findBestPose(bestTranslationList);
-  //   std::cout << bestPose.translation()[0] << "  "
-  //           << bestPose.translation()[1] << "  " << bestPose.translation()[2] << std::endl;
-  //   std::cout << bestPose.zyzEuler()[0] << "  "
-  //           << bestPose.zyzEuler()[1] << "  " << bestPose.zyzEuler()[2] << std::endl;
-  // }
-
-  bool
-  IterativeClosestFace::hasConverged ()
-  {
-    return (has_converged);
-  }
-
-  Eigen::Vector3f uniformRandom(const Eigen::Vector3f & min_boundary, const Eigen::Vector3f & max_boundary)
+  const Eigen::Vector3f
+  uniformRandom (const Eigen::Vector3f & min_boundary, const Eigen::Vector3f & max_boundary)
   {
       Eigen::Vector3f random_value;
       std::random_device rand_device;
       std::mt19937 generator (rand_device());
-      std::uniform_real_distribution<float> distr_x(min_boundary[0], max_boundary[0]);
-      std::uniform_real_distribution<float> distr_y(min_boundary[1], max_boundary[1]);
-      std::uniform_real_distribution<float> distr_z(min_boundary[2], max_boundary[2]);
-      random_value[0] = distr_x(generator);
-      random_value[1] = distr_y(generator);
-      random_value[2] = distr_z(generator);
+      std::uniform_real_distribution<float> distr_x (min_boundary[0], max_boundary[0]);
+      std::uniform_real_distribution<float> distr_y (min_boundary[1], max_boundary[1]);
+      std::uniform_real_distribution<float> distr_z (min_boundary[2], max_boundary[2]);
+      random_value[0] = distr_x (generator);
+      random_value[1] = distr_y (generator);
+      random_value[2] = distr_z (generator);
 
-      return random_value;
+      return (random_value);
   }
 
-  Eigen::Vector3f gaussianRandom(const Eigen::Vector3f & mean, const Eigen::Vector3f & deviation)
+  const Eigen::Vector3f gaussianRandom(const Eigen::Vector3f & mean, const Eigen::Vector3f & deviation)
   {
       Eigen::Vector3f random_value;
       std::random_device rand_device;
       std::mt19937 generator (rand_device());
-      std::normal_distribution<float> distr_x(mean[0], deviation[0]);
-      std::normal_distribution<float> distr_y(mean[1], deviation[1]);
-      std::normal_distribution<float> distr_z(mean[2], deviation[2]);
-      random_value[0] = distr_x(generator);
-      random_value[1] = distr_y(generator);
-      random_value[2] = distr_z(generator);
+      std::normal_distribution<float> distr_x (mean[0], deviation[0]);
+      std::normal_distribution<float> distr_y (mean[1], deviation[1]);
+      std::normal_distribution<float> distr_z (mean[2], deviation[2]);
+      random_value[0] = distr_x (generator);
+      random_value[1] = distr_y (generator);
+      random_value[2] = distr_z (generator);
 
-      return random_value;
+      return (random_value);
   }
 
-  Eigen::Vector3f gaussianRandom(const Eigen::Vector3f & mean, float deviation)
+  const Eigen::Vector3f gaussianRandom(const Eigen::Vector3f & mean, float deviation)
   {
       Eigen::Vector3f std_deviation;
       std_deviation[0] = deviation;
       std_deviation[1] = deviation;
       std_deviation[2] = deviation;
-      return gaussianRandom(mean, std_deviation);
+      return (gaussianRandom (mean, std_deviation));
   }
 
   const Eigen::Vector3f matrix2euler (const Eigen::Matrix3f & mat_rotation)

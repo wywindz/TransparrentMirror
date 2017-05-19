@@ -33,6 +33,19 @@ namespace radi
       void
       setScenePointCloud (const PointCloudConstPtr & scene_point_cloud);
 
+      /*!
+       * \fn void setIndices ()
+       * \brief Disable using the indices, i.e, all the points in the scene cloud will be used in ICF algorithm.
+       */
+      void
+      setIndices ();
+
+      /*!
+       * \fn void setIndices (const IndicesConstPtr & indices)
+       * \brief Set the indices of the points which will be involved in ICF algorithm. It can accelerate the
+       * computation of ICF algorithm and is usually called during the coarse recognition.
+       * \param[in] indices The indices of the points which will be involved in ICF algorithm.
+       */
       void
       setIndices (const IndicesConstPtr & indices);
 
@@ -43,10 +56,10 @@ namespace radi
       setVariationRotation (const Eigen::Vector3f & left_board, const Eigen::Vector3f & right_board);
 
       void
-      setIterationOuter (std::size_t iteration_outer);
+      setIterationOuter (int iteration_outer);
 
       void
-      setIterationInner (std::size_t iteration_inner);
+      setIterationInner (int iteration_inner);
 
       void
       setInitialTransformation (const Eigen::Matrix4f & init_transf);
@@ -66,14 +79,17 @@ namespace radi
       void
       getVariationRotation (Eigen::Vector3f & left_board, Eigen::Vector3f & right_board);
 
-      std::size_t
+      int
       getIterationOuter ();
 
-      std::size_t
+      int
       getIterationInner ();
 
       const Eigen::Matrix4f
       getInitialTransformation ();
+
+      void
+      getThresholds (float & near, float & extreme, float & valid);
 
       float
       calObjectiveValue (const Eigen::Matrix4f & mat_transf);
@@ -81,33 +97,32 @@ namespace radi
       void
       estimate (Eigen::Matrix4f & estimated_transf);
 
-      bool
-      hasConverged ();
-
     private:
       std::string model_file_;
       Mesh model_mesh_;
       PointCloudConstPtr scene_point_cloud_;
+      PointCloudConstPtr point_cloud_used_;
       IndicesConstPtr indices_;
+      bool use_indices_;
+
       Eigen::Vector3f left_board_translation_;
       Eigen::Vector3f right_board_translation_;
       Eigen::Vector3f left_board_rotation_;
       Eigen::Vector3f right_board_rotation_;
+
       std::size_t iteration_outer_;
       std::size_t iteration_inner_;
       Eigen::Matrix4f init_transf_;
       float threshold_distance_near_;
       float threshold_distance_extreme_;
       float threshold_valid_;
-      bool has_converged;
-
   }; // class IterativeClosestFace
 
-  Eigen::Vector3f
-  uniformRandom(const Eigen::Vector3f & min_boundary, const Eigen::Vector3f & max_boundary);
-  Eigen::Vector3f
-  gaussianRandom(const Eigen::Vector3f & mean, const Eigen::Vector3f & deviation);
-  Eigen::Vector3f
+  const Eigen::Vector3f
+  uniformRandom (const Eigen::Vector3f & min_boundary, const Eigen::Vector3f & max_boundary);
+  const Eigen::Vector3f
+  gaussianRandom (const Eigen::Vector3f & mean, const Eigen::Vector3f & deviation);
+  const Eigen::Vector3f
   gaussianRandom(const Eigen::Vector3f & mean, float deviation);
 
   const Eigen::Vector3f
