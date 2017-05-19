@@ -6,8 +6,10 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 find_package(PCL 1.8 REQUIRED)
-find_package(Qt4 COMPONENTS QTCORE)
+find_package(VTK REQUIRED)
+find_package(Qt4 REQUIRED)
 # find_package(Qt5Core)
+# find_package(Qt5Widgets)
 
 include_directories(${PCL_INCLUDE_DIRS})
 link_directories(${PCL_LIBRARY_DIRS})
@@ -31,7 +33,8 @@ set(SRC_LIST
     ccn_estimation.cpp
     ccn_corresp_group.cpp
     icf.cpp
-    mesh.cpp)
+    mesh.cpp
+    gui/main_window.cpp)
 
 add_executable(transparent_mirror ${SRC_LIST})
 target_link_libraries(transparent_mirror ${PCL_LIBRARIES})

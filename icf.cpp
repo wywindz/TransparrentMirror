@@ -52,6 +52,12 @@ namespace radi
   }
 
   void
+  IterativeClosestFace::setIndices (const IndicesConstPtr & indices)
+  {
+    indices_ = indices;
+  }
+
+  void
   IterativeClosestFace::setVariationTranslation (const Eigen::Vector3f & left_board, const Eigen::Vector3f & right_board)
   {
     left_board_translation_ = left_board;
@@ -572,10 +578,9 @@ namespace radi
     Eigen::Vector3f normal = vect_ab.cross (vect_ac);
     normal /= std::sqrt (normal.dot (normal));
     Eigen::Vector3f vect_ap = point - triangle_vertices[0];
-    float distance = distPointPlane (point, triangle_vertices);
-    Eigen::Vector3f point_projection = vect_ap - distance*normal;
+    Eigen::Vector3f vect_ap_perpend = vect_ap - vect_ap.dot (normal) / normal.dot (normal) * normal;
 
-    return (point_projection);
+    return (triangle_vertices[0]+vect_ap_perpend);
   }
 
   // Detect if the projection of a point is inside the triangle.
@@ -599,7 +604,7 @@ namespace radi
   distPointPoint (const Eigen::Vector3f & point_a, const Eigen::Vector3f & point_b)
   {
     Eigen::Vector3f vect_ab = point_b - point_a;
-    return (std::sqrt (vect_ab.dot (vect_ab)));
+    return (vect_ab.norm ());
   }
 
   // Calculate the distance from a point to a line segment.
@@ -611,16 +616,21 @@ namespace radi
     float scalar_1 = vectW.dot (vectV);
     float scalar_2 = vectV.dot (vectV);
 
-    if (scalar_1 <= 0.0) {
+    if (scalar_1 <= 0.0)
+    {
         // Projected point on the line is on the left of segmentVertices[0].
         return (distPointPoint (point, segment_vertices[0]));
-    } else if (scalar_1 >= scalar_2) {
+    }
+    else if (scalar_1 >= scalar_2)
+    {
         // Projected point on the line is on the right of segmentVertices[1].
         return (distPointPoint (point, segment_vertices[1]));
-    } else {
+    }
+    else
+    {
         // Projected point on the line is on the line segment.
-        Eigen::Vector3f projectedPoint = segment_vertices[0] + scalar_1/scalar_2*vectV;
-        return (distPointPoint (point, projectedPoint));
+        Eigen::Vector3f point_projection = segment_vertices[0] + scalar_1/scalar_2*vectV;
+        return (distPointPoint (point, point_projection));
     }
   }
 
@@ -633,8 +643,9 @@ namespace radi
     Eigen::Vector3f normal = vect_ab.cross (vect_ac);
     normal /= std::sqrt (normal.dot (normal));
     Eigen::Vector3f vect_ap = point - triangle_vertices[0];
+    Eigen::Vector3f vect_ap_parallel = vect_ap.dot (normal) / normal.dot (normal) * normal;
 
-    return (vect_ap.dot (normal));
+    return (vect_ap_parallel.norm ());
   }
 
 

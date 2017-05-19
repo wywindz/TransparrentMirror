@@ -2,6 +2,11 @@
 #include <Eigen/Eigenvalues>
 #include <Eigen/SVD>
 
+#include <pcl/common/transforms.h>
+#include <pcl/PolygonMesh.h>
+#include <pcl/io/vtk_lib_io.h>
+#include <pcl/visualization/pcl_visualizer.h>
+
 #include "ccn_corresp_group.h"
 #include "icf.h"
 
@@ -86,6 +91,20 @@ namespace radi
             std::cout << "Transform normal of the scene: " << transformation.rotation ()*ccn_scene.getNormal () << std::endl;
             std::cout << "Transform center of the scene: " << transformation.rotation ()*ccn_scene.getCenter () + transformation.translation () << std::endl;
 
+            // Show 3d model and transformed point cloud.
+            pcl::PointCloud<pcl::PointXYZ>::Ptr transformed_scene (new pcl::PointCloud<pcl::PointXYZ> ());
+            pcl::transformPointCloud(*(this->point_cloud_), *transformed_scene, transformation.matrix ());
+            pcl::PolygonMesh mesh;
+            // pcl::io::loadPolygonFileSTL("Models/cuboid.stl", mesh);
+            pcl::io::loadPolygonFileSTL("Models/cup.stl", mesh);
+            pcl::visualization::PCLVisualizer viewer ("Model & Point Cloud");
+            viewer.addPolygonMesh(mesh);
+            viewer.addPointCloud<pcl::PointXYZ> (transformed_scene, "Transformed point cloud");
+            while (!viewer.wasStopped ())
+            {
+              viewer.spinOnce ();
+            }
+
             // Perform ICF algorithm. Refine the tramsformations.
             try
             {
@@ -100,13 +119,14 @@ namespace radi
             }
           }
 
-          if (~inner_objective_list.empty())
+          if (!inner_objective_list.empty())
           {
             std::vector<std::size_t> order_indices (inner_objective_list.size());
             std::iota(order_indices.begin (), order_indices.end (), 0);
             std::sort(order_indices.begin (), order_indices.end (), [&inner_objective_list](int idx_1, int idx_2)
                     { return inner_objective_list[idx_1] >= inner_objective_list[idx_2]; });
 
+            std::cout << "Index: " << order_indices[0] << std::endl;
             transf_list.push_back(inner_transf_list[order_indices[0]]);
           }
         }

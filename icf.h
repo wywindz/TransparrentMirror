@@ -21,6 +21,8 @@ namespace radi
       typedef pcl::PointCloud<pcl::PointXYZ> PointCloud;
       typedef boost::shared_ptr<const PointCloud> PointCloudConstPtr;
 
+      typedef boost::shared_ptr<const std::vector<int> > IndicesConstPtr;
+
       IterativeClosestFace ();
       IterativeClosestFace (const std::string & model_file_path, const PointCloudConstPtr & scene_point_cloud);
       ~IterativeClosestFace ();
@@ -30,6 +32,9 @@ namespace radi
 
       void
       setScenePointCloud (const PointCloudConstPtr & scene_point_cloud);
+
+      void
+      setIndices (const IndicesConstPtr & indices);
 
       void
       setVariationTranslation (const Eigen::Vector3f & left_board, const Eigen::Vector3f & right_board);
@@ -83,6 +88,7 @@ namespace radi
       std::string model_file_;
       Mesh model_mesh_;
       PointCloudConstPtr scene_point_cloud_;
+      IndicesConstPtr indices_;
       Eigen::Vector3f left_board_translation_;
       Eigen::Vector3f right_board_translation_;
       Eigen::Vector3f left_board_rotation_;

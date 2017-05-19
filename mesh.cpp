@@ -1,8 +1,8 @@
 #include <cmath>
-#include <qt4/QtCore/QFile>
-#include <qt4/QtCore/QString>
-#include <qt4/QtCore/QStringList>
-#include <qt4/QtCore/QTextStream>
+#include <QFile>
+#include <QtCore/QString>
+#include <QtCore/QStringList>
+#include <QtCore/QTextStream>
 #include "mesh.h"
 
 namespace radi
