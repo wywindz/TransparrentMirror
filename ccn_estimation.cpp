@@ -66,6 +66,8 @@ namespace radi
     board_detector.setInputCloud(point_cloud_);
     board_detector.compute(board_point_indices);
 
+    indices_ = boost::make_shared<std::vector<int> >  (board_point_indices);
+
     std::cout << "Number of board points: " << board_point_indices.size() << std::endl;
 
     // Classify the board points.
@@ -137,6 +139,12 @@ namespace radi
   CCNEstimation::getMinNumPoints ()
   {
     return (min_num_points_);
+  }
+
+  const pcl::IndicesConstPtr
+  CCNEstimation::getIndices ()
+  {
+    return (indices_);
   }
 
   bool

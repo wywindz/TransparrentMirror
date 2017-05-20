@@ -41,8 +41,7 @@ namespace radi
       recognize (std::vector<Eigen::Matrix4f> & transf_list);
 
       void
-      recognize (std::vector<Eigen::Matrix4f> & transf_list,
-                 std::vector<pcl::Correspondence> & feature_corresp_list);
+      recognize (std::vector<Eigen::Matrix4f> & transf_list, std::vector<pcl::Correspondence> & feature_corresp_list);
 
     private:
       const std::vector<CVSFeature> * model_features_;
@@ -50,8 +49,8 @@ namespace radi
       float threshold_;
 
       bool
-      pairFeatures (const CVSFeature & scene_feature,
-              const CVSFeature & model_feature, std::vector<std::vector<pcl::Correspondence> > & angle_corresps_list);
+      pairFeatures (const CVSFeature & scene_feature, const CVSFeature & model_feature,
+          std::vector<std::vector<pcl::Correspondence> > & angle_corresps_list);
 
   }; // class CVSCorrespGroup
 

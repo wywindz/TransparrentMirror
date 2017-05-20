@@ -34,16 +34,10 @@ namespace radi
       setScenePointCloud (const PointCloudConstPtr & scene_point_cloud);
 
       /*!
-       * \fn void setIndices ()
-       * \brief Disable using the indices, i.e, all the points in the scene cloud will be used in ICF algorithm.
-       */
-      void
-      setIndices ();
-
-      /*!
        * \fn void setIndices (const IndicesConstPtr & indices)
        * \brief Set the indices of the points which will be involved in ICF algorithm. It can accelerate the
-       * computation of ICF algorithm and is usually called during the coarse recognition.
+       * computation of ICF algorithm and is usually called during the coarse recognition. When 'indices' is empty,
+       * all the points will be used in ICF algorithm.
        * \param[in] indices The indices of the points which will be involved in ICF algorithm.
        */
       void

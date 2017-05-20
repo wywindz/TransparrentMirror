@@ -38,7 +38,7 @@ namespace radi
 
   void
   CVSCorrespGroup::recognize (std::vector<Eigen::Matrix4f> & transf_list,
-             std::vector<pcl::Correspondence> & feature_corresp_list)
+      std::vector<pcl::Correspondence> & feature_corresp_list)
   {
     for (std::size_t idx_scene = 0; idx_scene < scene_features_->size (); ++idx_scene)
     {
@@ -119,8 +119,8 @@ namespace radi
   }
 
   bool
-  CVSCorrespGroup::pairFeatures (const CVSFeature & scene_feature,
-          const CVSFeature & model_feature, std::vector<std::vector<pcl::Correspondence> > & angle_corresps_list)
+  CVSCorrespGroup::pairFeatures (const CVSFeature & scene_feature, const CVSFeature & model_feature,
+      std::vector<std::vector<pcl::Correspondence> > & angle_corresps_list)
   {
     const std::vector<float> & angle_sequence_scene = scene_feature.getIncludedAngles();
     const std::vector<float> & angle_sequence_model = model_feature.getIncludedAngles();

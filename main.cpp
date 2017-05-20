@@ -245,11 +245,14 @@ int main ()
   std::cout << "Number of ccn features in the scene cloud: " << ccn_feature_list.size() << std::endl;
 
   radi::CCNCorrespGroup ccn_corresp;
-  ccn_corresp.setInputCloud(sceneDownSampled);
+  ccn_corresp.setReferenceModel ("./Models/cup.stl");
+  ccn_corresp.setInputCloud (sceneDownSampled);
+  ccn_corresp.setIndices (ccn_estimator.getIndices ());
   ccn_corresp.setModelFeatures(&ccn_features);
   ccn_corresp.setSceneFeatures(&ccn_feature_list);
-  std::vector<Eigen::Matrix4f> transf_list;
-  ccn_corresp.recognize(transf_list);
+  float objective;
+  Eigen::Matrix4f mat_transf;
+  ccn_corresp.recognize(objective, mat_transf);
 
   // // Detect board points.
   // radi::BoardDetector board_detector;

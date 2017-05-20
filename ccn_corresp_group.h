@@ -10,6 +10,7 @@
 #include <pcl/recognition/cg/correspondence_grouping.h>
 
 #include "ccn.h"
+#include "icf.h"
 
 namespace radi
 {
@@ -23,8 +24,16 @@ namespace radi
       typedef pcl::PointCloud<pcl::PointXYZ> PointCloud;
       typedef boost::shared_ptr<const PointCloud> PointCloudConstPtr;
 
+      typedef boost::shared_ptr<const std::vector<int> > IndicesConstPtr;
+
+      void
+      setReferenceModel (const std::string & model_file_path);
+
       void
       setInputCloud (const PointCloudConstPtr & point_cloud);
+
+      void
+      setIndices (const IndicesConstPtr & indices);
 
       void
       setModelFeatures (const std::vector<CCNFeature> * model_features);
@@ -51,17 +60,21 @@ namespace radi
       getResolution () const { return resolution_; }
 
       void
-      recognize (std::vector<Eigen::Matrix4f> & transf_list);
-
-      void
-      recognize (std::vector<Eigen::Matrix4f> & transf_list, std::vector<pcl::Correspondence> & feature_corresp_list);
+      recognize (float & best_objective, Eigen::Matrix4f & best_transformation);
 
     private:
+      std::string model_file_;
       PointCloudConstPtr point_cloud_;    /*!<! Input point cloud. */
+      IndicesConstPtr indices_;   /*!<! Indices of the points used in ICF algorithm. */
       const std::vector<CCNFeature> * model_features_;    /*<! Model feature list. */
       const std::vector<CCNFeature> * scene_features_;    /*<! Point cloud feature list. */
       float radius_variation_;    /*<! Variation of radius which is used to pair 2 features. */
-      float resolution_;   /*<! Resolution around the normal of circle plane. */
+      float resolution_;   /*<! Resolution of the rotation around the normal of circle plane. */
+      IterativeClosestFace icf_;   /*<! ICF algorithm. */
+
+      void
+      calSelfRotation (float & best_objective, Eigen::Matrix4f & best_transformation,
+          const CCNFeature & scene_feature, const CCNFeature & model_feature, bool reversed = false);
 
   }; // class CCNCorrespGroup
 

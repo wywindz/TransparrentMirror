@@ -55,25 +55,26 @@ namespace radi
   }
 
   void
-  IterativeClosestFace::setIndices ()
-  {
-    indices_ = NULL;
-    use_indices_ = false;
-    point_cloud_used_ = scene_point_cloud_;
-  }
-
-  void
   IterativeClosestFace::setIndices (const IndicesConstPtr & indices)
   {
-    indices_ = indices;
-    use_indices_ = true;
-    IterativeClosestFace::PointCloud::Ptr point_cloud (new IterativeClosestFace::PointCloud ());
-    pcl::ExtractIndices<pcl::PointXYZ> extractor;
-    extractor.setInputCloud (scene_point_cloud_);
-    extractor.setIndices (indices_);
-    extractor.filter (*point_cloud);
+    if (indices->empty())
+    {
+      indices_ = NULL;
+      use_indices_ = false;
+      point_cloud_used_ = scene_point_cloud_;
+    }
+    else
+    {
+      indices_ = indices;
+      use_indices_ = true;
+      IterativeClosestFace::PointCloud::Ptr point_cloud (new IterativeClosestFace::PointCloud ());
+      pcl::ExtractIndices<pcl::PointXYZ> extractor;
+      extractor.setInputCloud (scene_point_cloud_);
+      extractor.setIndices (indices_);
+      extractor.filter (*point_cloud);
 
-    point_cloud_used_ = point_cloud;
+      point_cloud_used_ = point_cloud;
+    }
   }
 
   void
@@ -163,6 +164,7 @@ namespace radi
   float
   IterativeClosestFace::calObjectiveValue (const Eigen::Matrix4f & mat_transf)
   {
+    std::cout << "Number of points used: " << this->point_cloud_used_->size () << std::endl;
     // std::cout << "Number of triangles: " << this->model_mesh_.getNumTriangles() << std::endl;
     pcl::PointCloud<pcl::PointXYZ>::Ptr transformed_scene (new pcl::PointCloud<pcl::PointXYZ> ());
     pcl::transformPointCloud(*point_cloud_used_, *transformed_scene, mat_transf);
