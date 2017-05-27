@@ -8,6 +8,8 @@
 #include <pcl/keypoints/harris_3d.h>
 // #include <pcl/visualization/cloud_viewer.h>
 #include <pcl/visualization/pcl_visualizer.h>
+#include <pcl/common/transforms.h>
+#include <pcl/io/vtk_lib_io.h>
 
 #include "cvs.h"
 #include "cvs_estimation.h"
@@ -17,9 +19,11 @@
 #include "ccn_corresp_group.h"
 #include "board_detector.h"
 #include "icf.h"
+#include "distance_measurer.h"
 
 int main ()
 {
+  radi::DistanceMeasurer dist;
   //
   // Specify CVSFeature(s) in the reference model.
   Eigen::Matrix4f mat_camera = Eigen::Matrix4Xf::Identity(4,4);
@@ -253,6 +257,23 @@ int main ()
   float objective;
   Eigen::Matrix4f mat_transf;
   ccn_corresp.recognize(objective, mat_transf);
+
+  std::cout << "Final Objective: " << objective << std::endl;
+  std::cout << "Final Transformation: " << mat_transf << std::endl;
+
+  // Show 3d model and transformed point cloud.
+  pcl::PointCloud<pcl::PointXYZ>::Ptr transformed_scene (new pcl::PointCloud<pcl::PointXYZ> ());
+  pcl::transformPointCloud(*sceneDownSampled, *transformed_scene, mat_transf);
+  pcl::PolygonMesh mesh;
+  // pcl::io::loadPolygonFileSTL("Models/cuboid.stl", mesh);
+  pcl::io::loadPolygonFileSTL("Models/cup.stl", mesh);
+  pcl::visualization::PCLVisualizer viewer ("Model & Point Cloud");
+  viewer.addPolygonMesh(mesh);
+  viewer.addPointCloud<pcl::PointXYZ> (transformed_scene, "Transformed point cloud");
+  while (!viewer.wasStopped ())
+  {
+    viewer.spinOnce ();
+  }
 
   // // Detect board points.
   // radi::BoardDetector board_detector;

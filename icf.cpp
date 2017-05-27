@@ -165,7 +165,7 @@ namespace radi
   IterativeClosestFace::calObjectiveValue (const Eigen::Matrix4f & mat_transf)
   {
     std::cout << "Number of points used: " << this->point_cloud_used_->size () << std::endl;
-    // std::cout << "Number of triangles: " << this->model_mesh_.getNumTriangles() << std::endl;
+    std::cout << "Number of triangles: " << this->model_mesh_.getNumTriangles() << std::endl;
     pcl::PointCloud<pcl::PointXYZ>::Ptr transformed_scene (new pcl::PointCloud<pcl::PointXYZ> ());
     pcl::transformPointCloud(*point_cloud_used_, *transformed_scene, mat_transf);
 

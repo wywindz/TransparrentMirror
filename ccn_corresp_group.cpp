@@ -164,19 +164,19 @@ namespace radi
       // std::cout << "Transform normal of the scene: " << transformation.rotation ()*scene_normal << std::endl;
       // std::cout << "Transform center of the scene: " << transformation.rotation ()*scene_feature.getCenter () + transformation.translation () << std::endl;
 
-      // Show 3d model and transformed point cloud.
-      pcl::PointCloud<pcl::PointXYZ>::Ptr transformed_scene (new pcl::PointCloud<pcl::PointXYZ> ());
-      pcl::transformPointCloud(*(this->point_cloud_), *transformed_scene, transformation.matrix ());
-      pcl::PolygonMesh mesh;
-      // pcl::io::loadPolygonFileSTL("Models/cuboid.stl", mesh);
-      pcl::io::loadPolygonFileSTL("Models/cup.stl", mesh);
-      pcl::visualization::PCLVisualizer viewer ("Model & Point Cloud");
-      viewer.addPolygonMesh(mesh);
-      viewer.addPointCloud<pcl::PointXYZ> (transformed_scene, "Transformed point cloud");
-      while (!viewer.wasStopped ())
-      {
-        viewer.spinOnce ();
-      }
+      // // Show 3d model and transformed point cloud.
+      // pcl::PointCloud<pcl::PointXYZ>::Ptr transformed_scene (new pcl::PointCloud<pcl::PointXYZ> ());
+      // pcl::transformPointCloud(*(this->point_cloud_), *transformed_scene, transformation.matrix ());
+      // pcl::PolygonMesh mesh;
+      // // pcl::io::loadPolygonFileSTL("Models/cuboid.stl", mesh);
+      // pcl::io::loadPolygonFileSTL("Models/cup.stl", mesh);
+      // pcl::visualization::PCLVisualizer viewer ("Model & Point Cloud");
+      // viewer.addPolygonMesh(mesh);
+      // viewer.addPointCloud<pcl::PointXYZ> (transformed_scene, "Transformed point cloud");
+      // while (!viewer.wasStopped ())
+      // {
+      //   viewer.spinOnce ();
+      // }
 
       // Perform ICF algorithm. Refine the tramsformations.
       try
@@ -199,7 +199,6 @@ namespace radi
       std::sort(order_indices.begin (), order_indices.end (), [&inner_objective_list](int idx_1, int idx_2)
               { return inner_objective_list[idx_1] >= inner_objective_list[idx_2]; });
 
-      std::cout << "Index: " << order_indices[0] << std::endl;
       best_objective = inner_objective_list[order_indices[0]];
       best_transformation = inner_transf_list[order_indices[0]];
     }
