@@ -12,6 +12,8 @@ find_package(CUDA REQUIRED)
 # find_package(Qt5Core)
 # find_package(Qt5Widgets)
 
+set(CUDA_SEPARABLE_COMPILATION ON)
+
 ###
 get_directory_property(dir_defs DIRECTORY ${CMAKE_SOURCE_DIR} COMPILE_DEFINITIONS)
 set(vtk_flags)
@@ -73,12 +75,12 @@ set(SRC_LIST
     distance_measurer.h
     gui/main_window.cpp)
 
-# CUDA_COMPILE(cuda_o ${CUDA_FILES})
-CUDA_ADD_LIBRARY(cuda_o ${CUDA_FILES})
+CUDA_COMPILE(cuda_o ${CUDA_FILES})
+# CUDA_ADD_LIBRARY(cuda_o ${CUDA_FILES})
 # add_library(${cuda_o})
 # target_link_libraries(${cuda_o} pcl_gpu_containers)
 # add_executable(transparent_mirror ${SRC_LIST} ${cuda_o})
-cuda_add_executable(transparent_mirror ${SRC_LIST})
+cuda_add_executable(transparent_mirror ${SRC_LIST} ${cuda_o})
 # cuda_add_executable(transparent_mirror ${SRC_LIST} ${CUDA_FILES})
 target_link_libraries(transparent_mirror ${PCL_LIBRARIES})
 target_link_libraries(transparent_mirror ${QT_QTCORE_LIBRARY})
