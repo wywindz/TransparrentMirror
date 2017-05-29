@@ -25,19 +25,19 @@ namespace radi {
   float
   DistanceMeasurer::calShortestDistance (const std::vector<float> point)
   {
-    thrust::device_vector = point;
+    thrust::device_vector<float> dev_point = point;
 
-    distancePointTriangle<<<(dev_triangles_.size () + 127)/128, 128>>> (point, dev_distances_);
+    // distancePointTriangle<<<(dev_triangles_.size () + 127)/128, 128>>> (point, dev_distances_);
 
     return (0.0);
   }
 
 
   // Calculate the distance from a point to a triangle mesh.
-  __global__ float
-  DistanceMeasurer::distPointTriangle (const thrust::device_vector<float> & point, thrust::device_vector<float> & dev_distances)
-  {
-    return (0.0);
+  // __global__ void
+  // DistanceMeasurer::distPointTriangle (const thrust::device_vector<float> & dev_point, thrust::device_vector<float> & dev_distances, float & distance)
+  // {
+  //   distance = 0.0;
     // int tid = threadIdx.x + blockDim.x * blockIdx.x;
 
     // if (tid < dev_triangles_.size ())
@@ -71,7 +71,7 @@ namespace radi {
 
     // }
 
-  }
+  // }
 
   /*
   // Calculate the projected point on a plane.

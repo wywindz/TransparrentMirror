@@ -26,11 +26,11 @@ namespace radi {
       thrust::device_vector<thrust::device_vector<float> > dev_triangles_;
       thrust::device_vector<float> dev_distances_;
 
-      /*
       // Calculate the distance from a point to a triangle mesh.
-      __global__ float
-      distPointTriangle (const thrust::device_vector<float> & point, thrust::device_vector<float> & dev_distances);
+      // __global__ void
+      // distPointTriangle (const thrust::device_vector<float> & dev_point, thrust::device_vector<float> & dev_distances, float & distance);
 
+      /*
       // Calculate the projected point on a plane.
       __device__ thrust::device_vector
       pointProjectionOnPlane (const Eigen::Vector3f & point, const std::vector<Eigen::Vector3f> & triangle_vertices);
