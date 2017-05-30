@@ -444,19 +444,19 @@ namespace radi
 
     if (scalar_1 <= 0.0)
     {
-        // Projected point on the line is on the left of segmentVertices[0].
-        return (distPointPoint (point, segment_vertices[0]));
+      // Projected point on the line is on the left of segmentVertices[0].
+      return (distPointPoint (point, segment_vertices[0]));
     }
     else if (scalar_1 >= scalar_2)
     {
-        // Projected point on the line is on the right of segmentVertices[1].
-        return (distPointPoint (point, segment_vertices[1]));
+      // Projected point on the line is on the right of segmentVertices[1].
+      return (distPointPoint (point, segment_vertices[1]));
     }
     else
     {
-        // Projected point on the line is on the line segment.
-        Eigen::Vector3f point_projection = segment_vertices[0] + scalar_1/scalar_2*vectV;
-        return (distPointPoint (point, point_projection));
+      // Projected point on the line is on the line segment.
+      Eigen::Vector3f point_projection = segment_vertices[0] + scalar_1/scalar_2*vectV;
+      return (distPointPoint (point, point_projection));
     }
   }
 
