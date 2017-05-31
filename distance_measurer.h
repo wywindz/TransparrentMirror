@@ -3,6 +3,8 @@
 #ifndef __MIRROR_DISTANCE_H_
 #define __MIRROR_DISTANCE_H_
 
+#include <vector>
+#include <Eigen/Dense>
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <thrust/device_vector.h>
@@ -17,30 +19,40 @@ namespace radi {
       ~DistanceMeasurer();
 
       void
-      setTriangles (const std::vector<std::vector<float> > triangles);
+      setNumTriangles (int num_triangles);
 
+      void
+      setTriangles (const std::vector<std::vector<Eigen::Vector3f> > & triangles);
+
+      /*!
+       * \fn float calShortestDistance (const float * point);
+       * \brief Calculate the shortest distance from the given point to triangle meshes in a STL file.
+       * \param[in] point Pointer that points to the array storing the coordinates of the point.
+       * \return The shortest distance from the given point to triangle meshes in a STL file.
+       */
       float
-      calShortestDistance (const std::vector<float> point);
+      calShortestDistance (const float * point);
 
     private:
-      thrust::device_vector<thrust::device_vector<float> > dev_triangles_;
-      thrust::device_vector<float> dev_distances_;
+      int num_triangles_;
+      int * dev_num_triangles_;
+      float * dev_triangles_;
 
   };
 
-  // Calculate the distance from a point to a triangle mesh.
   /*!
-   * \fn __global__ void distPointTriangle (const float * dev_point, const float ** dev_triangles, float * dev_distances);
+   * \fn __global__ void distPointTriangle (float * dev_point, const float * dev_triangles, int * dev_num_triangles, float * dev_distances);
    * \brief Calculate the distance from the given point to a triangle mesh. NOTICE! The coordinates of the triangle
-   *        vertices are stored in a single array, i.e., 9 numbers are stored in one array.
+   *        vertices of all the meshes are stored in a single array.
    * \param[in] dev_point Coordinates of the point.
-   * \param[in] dev_triangles Triangle meshes in the stl file. Notice that this is a 2-Dim array. The outer
-   *            contains num_triangle_meshes elements, and the inner contains 9 elements which store the coordinates of
-   *            the 3 vertices in one triangle mesh sequentially.
+   * \param[in] dev_triangles Coordinates of vertices of all the triangle meshes in the STL file. Notice that this is a
+   *            1-Dim array with (9*dev_num_triangle_meshes) elements. Every 9 elements represent the coordinates of the 3 vertices
+   *            in a single mesh.
+   * \param[in] dev_num_triangles Number of the triangle meshes in the STL file.
    * \param[out] dev_distances Ditances from the given point to each triangle mesh.
    */
   __global__ void
-  distPointTriangle (const float * dev_point, const float ** dev_triangles, const int & dev_num_triangles, float * dev_distances);
+  distPointTriangle (float * dev_point, float * dev_triangles, int * dev_num_triangles, float * dev_distances);
 
   // Calculate the projected point on a plane.
   __device__ void

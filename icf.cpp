@@ -9,6 +9,7 @@
 #include <pcl/visualization/pcl_visualizer.h>
 
 #include "icf.h"
+#include "distance_measurer.h"
 
 namespace radi
 {
@@ -169,19 +170,30 @@ namespace radi
     pcl::PointCloud<pcl::PointXYZ>::Ptr transformed_scene (new pcl::PointCloud<pcl::PointXYZ> ());
     pcl::transformPointCloud(*point_cloud_used_, *transformed_scene, mat_transf);
 
+    // Using CUDA.
+    radi::DistanceMeasurer dist_measurer;
+    dist_measurer.setNumTriangles (model_mesh_.getNumTriangles());
+    dist_measurer.setTriangles (model_mesh_.getAllTriangles ());
+
     float objective_value = 0.0;
     for (std::size_t i = 0; i < (*transformed_scene).points.size(); ++i)
     {
-      Eigen::Vector3f point;
+      float point[3];
       point[0] = static_cast<float> ((*transformed_scene).points[i].x);
       point[1] = static_cast<float> ((*transformed_scene).points[i].y);
       point[2] = static_cast<float> ((*transformed_scene).points[i].z);
-      std::vector<float> distance_list (model_mesh_.getNumTriangles());
-      for (std::size_t j = 0; j < model_mesh_.getNumTriangles (); ++j)
-      {
-        distance_list[j] = distPointTriangle (point, model_mesh_.getTriangle(j));
-      }
-      float shortest_distance = *(std::min_element (distance_list.begin (), distance_list.end ()));
+      float shortest_distance = dist_measurer.calShortestDistance(point);
+
+      // Eigen::Vector3f point;
+      // point[0] = static_cast<float> ((*transformed_scene).points[i].x);
+      // point[1] = static_cast<float> ((*transformed_scene).points[i].y);
+      // point[2] = static_cast<float> ((*transformed_scene).points[i].z);
+      // std::vector<float> distance_list (model_mesh_.getNumTriangles());
+      // for (std::size_t j = 0; j < model_mesh_.getNumTriangles (); ++j)
+      // {
+      //   distance_list[j] = distPointTriangle (point, model_mesh_.getTriangle(j));
+      // }
+      // float shortest_distance = *(std::min_element (distance_list.begin (), distance_list.end ()));
 
       if (shortest_distance > threshold_distance_extreme_)
       {

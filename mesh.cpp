@@ -54,4 +54,10 @@ namespace radi
       return (triangles_[index]);
   }
 
+  const std::vector<std::vector<Eigen::Vector3f> > &
+  Mesh::getAllTriangles()
+  {
+    return (triangles_);
+  }
+
 } // namespace radi

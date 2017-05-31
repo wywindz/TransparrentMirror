@@ -7,47 +7,95 @@
 namespace radi {
 
   DistanceMeasurer::DistanceMeasurer ()
-  {
-
-  }
+  { }
 
   DistanceMeasurer::~DistanceMeasurer ()
   {
+    if (dev_num_triangles_)
+      cudaFree(dev_num_triangles_);
 
+    if (dev_triangles_)
+      cudaFree(dev_triangles_);
   }
 
   void
-  DistanceMeasurer::setTriangles (const std::vector<std::vector<float> > triangles)
+  DistanceMeasurer::setNumTriangles (int num_triangles)
   {
-    dev_triangles_ = triangles;
-    dev_distances_ = thrust::device_vector<float> (triangles.size ());
+    num_triangles_ = num_triangles;
+    cudaMalloc ((void **)&dev_num_triangles_, sizeof(int));
+    cudaMemcpy(dev_num_triangles_, &num_triangles_, sizeof(int), cudaMemcpyHostToDevice);
+  }
+
+  void
+  DistanceMeasurer::setTriangles (const std::vector<std::vector<Eigen::Vector3f> > & triangles)
+  {
+    int total_size = triangles.size() * 9;
+    float * host_triangles = (float *)malloc (total_size*sizeof(float));
+    for (int i = 0; i < triangles.size(); ++i)
+    {
+      host_triangles[i*9+0] = triangles[i][0][0];
+      host_triangles[i*9+1] = triangles[i][0][1];
+      host_triangles[i*9+2] = triangles[i][0][2];
+      host_triangles[i*9+3] = triangles[i][1][0];
+      host_triangles[i*9+4] = triangles[i][1][1];
+      host_triangles[i*9+5] = triangles[i][1][2];
+      host_triangles[i*9+6] = triangles[i][2][0];
+      host_triangles[i*9+7] = triangles[i][2][1];
+      host_triangles[i*9+8] = triangles[i][2][2];
+    }
+
+    cudaMalloc (&dev_triangles_, total_size*sizeof(float));
+    cudaMemcpy (dev_triangles_, host_triangles, total_size*sizeof(float), cudaMemcpyHostToDevice);
+
+    free (host_triangles);
   }
 
   float
-  DistanceMeasurer::calShortestDistance (const std::vector<float> point)
+  DistanceMeasurer::calShortestDistance (const float * point)
   {
-    thrust::device_vector<float> dev_point = point;
+    float * dev_point;
+    cudaMalloc ((void **)&dev_point, 3*sizeof(float));
+    cudaMemcpy(dev_point, point, 3*sizeof(float), cudaMemcpyHostToDevice);
 
-    // distancePointTriangle<<<(dev_triangles_.size () + 127)/128, 128>>> (point, dev_distances_);
+    float * dev_distances;
+    cudaMalloc ((void **)&dev_distances, num_triangles_*sizeof(float));
+    distPointTriangle<<<(num_triangles_+255)/256, 256>>> (dev_point, dev_triangles_, dev_num_triangles_, dev_distances);
 
-    return (0.0);
+    float * distances = (float *) malloc (num_triangles_*sizeof(float));
+    cudaMemcpy(distances, dev_distances, num_triangles_*sizeof(float), cudaMemcpyDeviceToHost);
+
+    // std::cout << "Distances: ---------------------------------------------------" << std::endl;
+    // for (int i = 0; i < num_triangles_; ++i)
+    //   std::cout << distances[i] << std::endl;
+
+    thrust::stable_sort (distances, distances+num_triangles_, thrust::less_equal<float> ());
+
+    float min_distance = distances[0];
+
+    free (distances);
+    cudaFree (dev_point);
+    cudaFree (dev_distances);
+
+    return (min_distance);
   }
 
   // Calculate the distance from a point to a triangle mesh.
   __global__ void
-  distPointTriangle (const float * dev_point, const float ** dev_triangles, const int & dev_num_triangles, float * dev_distances)
+  distPointTriangle (float * dev_point, float * dev_triangles, int * dev_num_triangles, float * dev_distances)
   {
     int tid = threadIdx.x + blockDim.x * blockIdx.x;
 
-    if (tid < dev_num_triangles)
+    if (tid < dev_num_triangles[0])
     {
-      if (isPointInTriangle (dev_point, dev_triangles[tid]))
+      if (isPointInTriangle (dev_point, &dev_triangles[tid*9]))
       {
-        dev_distances[tid] = distPointPlane (dev_point, dev_triangles[tid]);
+        dev_distances[tid] = distPointPlane (dev_point, &dev_triangles[tid*9]);
       }
       else
       {
-        const float * dev_triangle = dev_triangles[tid];
+        dev_distances[tid] = distPointPlane (dev_point, &dev_triangles[tid*9]);
+
+        const float * dev_triangle = &dev_triangles[tid*9];
 
         // Calculate the distance from the point to the vertices and segments.
         float dev_distance_list[6];
@@ -121,9 +169,9 @@ namespace radi {
     normal[2] /= normal_norm;
 
     float vect_ap[3];
-    vect_ap[0] = dev_point[3] - dev_triangle_vertices[0];
-    vect_ap[1] = dev_point[4] - dev_triangle_vertices[1];
-    vect_ap[2] = dev_point[5] - dev_triangle_vertices[2];
+    vect_ap[0] = dev_point[0] - dev_triangle_vertices[0];
+    vect_ap[1] = dev_point[1] - dev_triangle_vertices[1];
+    vect_ap[2] = dev_point[2] - dev_triangle_vertices[2];
 
     float dot_ap_normal = vect_ap[0]*normal[0] + vect_ap[1]*normal[1] + vect_ap[2]*normal[2];
 
@@ -145,9 +193,9 @@ namespace radi {
     vect_ac[1] = dev_triangle_vertices[7] - dev_triangle_vertices[1];
     vect_ac[2] = dev_triangle_vertices[8] - dev_triangle_vertices[2];
     float vect_ap[3];
-    vect_ap[0] = dev_point[3] - dev_triangle_vertices[0];
-    vect_ap[1] = dev_point[4] - dev_triangle_vertices[1];
-    vect_ap[2] = dev_point[5] - dev_triangle_vertices[2];
+    vect_ap[0] = dev_point[0] - dev_triangle_vertices[0];
+    vect_ap[1] = dev_point[1] - dev_triangle_vertices[1];
+    vect_ap[2] = dev_point[2] - dev_triangle_vertices[2];
 
     float dot_ab_ab = vect_ab[0]*vect_ab[0] + vect_ab[1]*vect_ab[1] + vect_ab[2]*vect_ab[2];
     float dot_ac_ac = vect_ac[0]*vect_ac[0] + vect_ac[1]*vect_ac[1] + vect_ac[2]*vect_ac[2];
@@ -166,7 +214,6 @@ namespace radi {
   distPointPoint (const float * dev_point_a, const float * dev_point_b)
   {
     return (norm3df (dev_point_b[0]-dev_point_a[0], dev_point_b[1]-dev_point_a[1], dev_point_b[2]-dev_point_a[2]));
-
   }
 
   // Calculate the distance from a point to a line segment.
@@ -179,9 +226,9 @@ namespace radi {
     vect_v[2] = dev_segment_vertices[5] - dev_segment_vertices[2];
 
     float vect_w[3];
-    vect_w[0] = dev_point[3] - dev_segment_vertices[0];
-    vect_w[1] = dev_point[4] - dev_segment_vertices[1];
-    vect_w[2] = dev_point[5] - dev_segment_vertices[2];
+    vect_w[0] = dev_point[0] - dev_segment_vertices[0];
+    vect_w[1] = dev_point[1] - dev_segment_vertices[1];
+    vect_w[2] = dev_point[2] - dev_segment_vertices[2];
 
     float scalar_1 = vect_v[0]*vect_w[0] + vect_v[1]*vect_w[1] + vect_v[2]*vect_w[2];
     float scalar_2 = vect_v[0]*vect_v[0] + vect_v[1]*vect_v[1] + vect_v[2]*vect_v[2];
@@ -232,11 +279,14 @@ namespace radi {
     normal[2] /= normal_norm;
 
     float vect_ap[3];
-    vect_ap[0] = dev_point[3] - dev_triangle_vertices[0];
-    vect_ap[1] = dev_point[4] - dev_triangle_vertices[1];
-    vect_ap[2] = dev_point[5] - dev_triangle_vertices[2];
+    vect_ap[0] = dev_point[0] - dev_triangle_vertices[0];
+    vect_ap[1] = dev_point[1] - dev_triangle_vertices[1];
+    vect_ap[2] = dev_point[2] - dev_triangle_vertices[2];
 
     float dot_ap_normal = vect_ap[0]*normal[0] + vect_ap[1]*normal[1] + vect_ap[2]*normal[2];
+
+    if (dot_ap_normal < 0.0)
+        dot_ap_normal = -dot_ap_normal;
 
     return (fabsf (dot_ap_normal));
   }

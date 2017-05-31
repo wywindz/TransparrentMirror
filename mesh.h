@@ -27,6 +27,9 @@ namespace radi
       const std::vector<Eigen::Vector3f> &
       getTriangle (std::size_t index) const;
 
+      const std::vector<std::vector<Eigen::Vector3f> > &
+      getAllTriangles();
+
     private:
       std::vector<std::vector<Eigen::Vector3f> > triangles_;
 
