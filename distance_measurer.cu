@@ -81,7 +81,7 @@ namespace radi {
 
   // Calculate the distance from a point to a triangle mesh.
   __global__ void
-  distPointTriangle (float * dev_point, float * dev_triangles, int * dev_num_triangles, float * dev_distances)
+  distPointTriangle (const float * dev_point, const float * dev_triangles, const int * dev_num_triangles, float * dev_distances)
   {
     int tid = threadIdx.x + blockDim.x * blockIdx.x;
 

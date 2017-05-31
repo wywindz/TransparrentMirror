@@ -201,7 +201,8 @@ int main ()
   // }
 
   pcl::PointCloud<pcl::PointXYZ>::Ptr sceneRaw(new pcl::PointCloud<pcl::PointXYZ>());
-  if (pcl::io::loadPCDFile<pcl::PointXYZ>("./Models/cup00000.pcd", *sceneRaw) == -1)
+  // if (pcl::io::loadPCDFile<pcl::PointXYZ>("./Models/cup00000.pcd", *sceneRaw) == -1)
+  if (pcl::io::loadPCDFile<pcl::PointXYZ>("./Models/cup_noise_0.01_0.01_noisy00000.pcd", *sceneRaw) == -1)
   {
     PCL_ERROR("Couldn't read file cup00000.pcd.\n");
     return -1;
@@ -214,7 +215,7 @@ int main ()
   std::vector<int> indices;
   pcl::removeNaNFromPointCloud(*sceneRaw, *sceneNaNClean, indices);
   // pcl::io::savePCDFileASCII<pcl::PointXYZ>("./Models/cuboid_nan_clean.pcd", *sceneNaNClean);
-  pcl::io::savePCDFileASCII<pcl::PointXYZ>("./Models/cup_nan_clean.pcd", *sceneNaNClean);
+  pcl::io::savePCDFileASCII<pcl::PointXYZ>("./Models/cup_noise_nan_clean.pcd", *sceneNaNClean);
 
   // Remove outliers.
   pcl::PointCloud<pcl::PointXYZ>::Ptr sceneFiltered(new pcl::PointCloud<pcl::PointXYZ>);

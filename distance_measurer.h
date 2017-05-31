@@ -52,7 +52,7 @@ namespace radi {
    * \param[out] dev_distances Ditances from the given point to each triangle mesh.
    */
   __global__ void
-  distPointTriangle (float * dev_point, float * dev_triangles, int * dev_num_triangles, float * dev_distances);
+  distPointTriangle (const float * dev_point, const float * dev_triangles, const int * dev_num_triangles, float * dev_distances);
 
   // Calculate the projected point on a plane.
   __device__ void
