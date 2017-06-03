@@ -5,13 +5,22 @@ set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
+# set(freenect2_DIR "/usr/local/freenect2/")
+set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "/usr/local/freenect2/")
+
 find_package(PCL 1.8 REQUIRED)
 # find_package(VTK REQUIRED)
 find_package(Qt4 REQUIRED)
 find_package(CUDA REQUIRED)
+find_package(freenect2 REQUIRED)
+find_package(OpenCV REQUIRED)
 # include(FindCUDA)
 # find_package(Qt5Core)
 # find_package(Qt5Widgets)
+
+INCLUDE_DIRECTORIES("/usr/local/freenect2/include/")
+LINK_DIRECTORIES("/usr/local/freenect2/lib/")
+INCLUDE_DIRECTORIES(${OpenCV_INCLUDE_DIRS})
 
 # Fix the bug in VTK which could cause compilation error.
 get_directory_property(dir_defs DIRECTORY ${CMAKE_SOURCE_DIR} COMPILE_DEFINITIONS)
@@ -60,16 +69,13 @@ set(SRC_LIST
     mesh.cpp
     distance_measurer.cu
     distance_measurer.h
+    kinect2_grabber.cpp
     gui/main_window.cpp)
 
-# CUDA_ADD_LIBRARY(cuda_o ${CUDA_FILES})
-# add_library(${cuda_o})
-# target_link_libraries(${cuda_o} pcl_gpu_containers)
-# add_executable(transparent_mirror ${SRC_LIST} ${cuda_o})
 cuda_add_executable(transparent_mirror ${SRC_LIST})
-# cuda_add_executable(transparent_mirror ${SRC_LIST} ${CUDA_FILES})
 target_link_libraries(transparent_mirror ${PCL_LIBRARIES})
 target_link_libraries(transparent_mirror ${QT_QTCORE_LIBRARY})
-# target_link_libraries(transparent_mirror cuda_o)
+target_link_libraries(transparent_mirror freenect2)
+target_link_libraries(transparent_mirror ${OpenCV_LIBS})
 # target_link_libraries(testPCL ${Qt5Core_LIBRARIES})
 

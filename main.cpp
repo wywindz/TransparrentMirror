@@ -10,6 +10,7 @@
 #include <pcl/visualization/pcl_visualizer.h>
 #include <pcl/common/transforms.h>
 #include <pcl/io/vtk_lib_io.h>
+#include <pcl/io/ply_io.h>
 
 #include "cvs.h"
 #include "cvs_estimation.h"
@@ -20,9 +21,62 @@
 #include "board_detector.h"
 #include "icf.h"
 #include "distance_measurer.h"
+#include "kinect2_grabber.h"
 
 int main ()
 {
+  // boost::shared_ptr<pcl::PointCloud<pcl::PointXYZRGB>> cloud;
+  // boost::shared_ptr<pcl::PointCloud<pcl::PointXYZRGB>> cloud (new pcl::PointCloud<pcl::PointXYZRGB> ());
+  pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZRGB> ());
+  // K2G k2g(CPU);
+  radi::Kinect2Grabber kinect2_grabber(radi::ProcessorType::OPENGL);
+  std::cout << "getting cloud" << std::endl;
+  // cloud = k2g.getCloud();
+  // kinect2_grabber.getPointCloud(cloud);
+  kinect2_grabber.getPointCloud(cloud);
+  // cloud = kinect2_grabber.getPointCloud();
+
+  // k2g.printParameters();
+
+  cloud->sensor_orientation_.w() = 0.0;
+  cloud->sensor_orientation_.x() = 1.0;
+  cloud->sensor_orientation_.y() = 0.0;
+  cloud->sensor_orientation_.z() = 0.0;
+
+  boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer(new pcl::visualization::PCLVisualizer ("3D Viewer"));
+  viewer->setBackgroundColor (0, 0, 0);
+  pcl::visualization::PointCloudColorHandlerRGBField<pcl::PointXYZRGB> rgb(cloud);
+  viewer->addPointCloud<pcl::PointXYZRGB>(cloud, rgb, "sample cloud");
+  viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, "sample cloud");
+
+  // PlySaver ps(cloud, false, false, k2g);
+  // viewer->registerKeyboardCallback(KeyboardEventOccurred, (void*)&ps);
+
+  cv::Mat color, depth;
+
+  while(!viewer->wasStopped()){
+
+    viewer->spinOnce ();
+    std::chrono::high_resolution_clock::time_point tnow = std::chrono::high_resolution_clock::now();
+
+    // k2g.get(color, depth, cloud);
+    // kinect2_grabber.get(color, depth, cloud);
+    kinect2_grabber.getPointCloud(cloud);
+    // Showing only color since depth is float and needs conversion
+    // cv::imshow("color", color);
+    // int c = cv::waitKey(1);
+
+    std::chrono::high_resolution_clock::time_point tpost = std::chrono::high_resolution_clock::now();
+    std::cout << "delta " << std::chrono::duration_cast<std::chrono::duration<double>>(tpost-tnow).count() * 1000 << std::endl;
+    pcl::visualization::PointCloudColorHandlerRGBField<pcl::PointXYZRGB> rgb(cloud);
+    viewer->updatePointCloud<pcl::PointXYZRGB> (cloud, rgb, "sample cloud");
+
+  }
+
+  // k2g.shutDown();
+  kinect2_grabber.shutDown();
+
+  /*
   radi::DistanceMeasurer dist;
   //
   // Specify CVSFeature(s) in the reference model.
@@ -352,6 +406,7 @@ int main ()
   // extracter.setNegative(false);
   // extracter.filter(*cloudPlane);
 
+  */
 
   std::cout << "Hello World!" << std::endl;
   return 0;
