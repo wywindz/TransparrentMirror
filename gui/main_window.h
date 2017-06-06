@@ -5,12 +5,12 @@
 #ifndef MIRROR_MAIN_WINDOW_H_
 #define MIRROR_MAIN_WINDOW_H_
 
-// #include <QMainWindow>
-// #include <QVTKWidget.h>
+#include <QMainWindow>
+#include <QVTKWidget.h>
 
 namespace radi
 {
-  class MainWindow //: public QMainWindow
+  class MainWindow : public QMainWindow
   {
     // Q_OBJECT
 
@@ -19,8 +19,8 @@ namespace radi
       ~MainWindow ();
 
     private:
-      // QVTKWidget * viewer_kinect;
-      // QVTKWidget * viewer_model;
+      QVTKWidget * viewer_kinect;
+      QVTKWidget * viewer_model;
 
       void
       setWindowParameters ();

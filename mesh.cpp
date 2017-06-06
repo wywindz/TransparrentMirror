@@ -1,5 +1,5 @@
 #include <cmath>
-#include <QFile>
+#include <QtCore/QFile>
 #include <QtCore/QString>
 #include <QtCore/QStringList>
 #include <QtCore/QTextStream>

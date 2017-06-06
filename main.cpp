@@ -22,9 +22,26 @@
 #include "icf.h"
 #include "distance_measurer.h"
 #include "kinect2_grabber.h"
+#include "gui/main_window.h"
 
-int main ()
+
+#include <QApplication>
+// #include "gui/main_window.h"
+
+#include "vtkAutoInit.h"
+VTK_MODULE_INIT(vtkRenderingFreeType);
+
+int main (int argc, char * argv[])
 {
+  QApplication app (argc, argv);
+
+  radi::MainWindow main_window;
+  main_window.show ();
+  return app.exec ();
+
+  // return 0;
+
+  /*
   // boost::shared_ptr<pcl::PointCloud<pcl::PointXYZRGB>> cloud;
   // boost::shared_ptr<pcl::PointCloud<pcl::PointXYZRGB>> cloud (new pcl::PointCloud<pcl::PointXYZRGB> ());
   pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZRGB> ());
@@ -75,8 +92,10 @@ int main ()
 
   // k2g.shutDown();
   kinect2_grabber.shutDown();
+  */
 
   /*
+
   radi::DistanceMeasurer dist;
   //
   // Specify CVSFeature(s) in the reference model.
@@ -406,9 +425,10 @@ int main ()
   // extracter.setNegative(false);
   // extracter.filter(*cloudPlane);
 
-  */
 
   std::cout << "Hello World!" << std::endl;
   return 0;
+
+  */
 }
 
