@@ -28,26 +28,28 @@
 #include <QApplication>
 // #include "gui/main_window.h"
 
-#include "vtkAutoInit.h"
-VTK_MODULE_INIT(vtkRenderingFreeType);
+// #include "vtkAutoInit.h"
+// VTK_MODULE_INIT(vtkRenderingFreeType);
 
 int main (int argc, char * argv[])
 {
+  /*
   QApplication app (argc, argv);
 
   radi::MainWindow main_window;
   main_window.show ();
   return app.exec ();
+  */
 
   // return 0;
 
-  /*
   // boost::shared_ptr<pcl::PointCloud<pcl::PointXYZRGB>> cloud;
   // boost::shared_ptr<pcl::PointCloud<pcl::PointXYZRGB>> cloud (new pcl::PointCloud<pcl::PointXYZRGB> ());
   pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZRGB> ());
   // K2G k2g(CPU);
   radi::Kinect2Grabber kinect2_grabber(radi::ProcessorType::OPENGL);
   std::cout << "getting cloud" << std::endl;
+  kinect2_grabber.start();
   // cloud = k2g.getCloud();
   // kinect2_grabber.getPointCloud(cloud);
   kinect2_grabber.getPointCloud(cloud);
@@ -92,7 +94,6 @@ int main (int argc, char * argv[])
 
   // k2g.shutDown();
   kinect2_grabber.shutDown();
-  */
 
   /*
 

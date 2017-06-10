@@ -7,89 +7,12 @@
 
 namespace radi {
 
-  Kinect2Grabber::Kinect2Grabber (ProcessorType processor_type, bool mirror, std::string serial_number)
-          : mirror_(mirror), listener_(libfreenect2::Frame::Color | libfreenect2::Frame::Ir | libfreenect2::Frame::Depth),
-          undistorted_(512, 424, 4), registered_(512, 424, 4), big_mat_(1920, 1082, 4), qnan_(std::numeric_limits<float>::quiet_NaN())
-      {
-        if (freenect2_.enumerateDevices() == 0)
-        {
-          std::cout << "Warning! No Kinect2 device is connected!" << std::endl;
-          return;
-        }
-
-        switch (processor_type)
-        {
-          case CPU:
-            std::cout << "With CPU depth processing." << std::endl;
-            if (serial_number.empty())
-              device_ = freenect2_.openDefaultDevice (new libfreenect2::CpuPacketPipeline ());
-            else
-              device_ = freenect2_.openDevice (serial_number, new libfreenect2::CpuPacketPipeline ());
-
-            break;
-
-#ifdef WITH_OPENCL
-          case OPENCL:
-            std::cout << "With OpenCL depth processing." << std::endl;
-            if (serial_number.empty ())
-              device_ = freenect2_.openDefaultDevice(new libfreenect2::OpenCLPacketPipeline());
-            else
-              device_ = freenect2_.openDevice(serial_number, new libfreenect2::OpenCLPacketPipeline());
-            break;
-#endif
-
-          case OPENGL:
-            std::cout << "With OpenGL depth processing." << std::endl;
-            if (serial_number.empty())
-              device_ = freenect2_.openDefaultDevice (new libfreenect2::OpenGLPacketPipeline ());
-            else
-              device_ = freenect2_.openDevice (serial_number, new libfreenect2::OpenGLPacketPipeline ());
-            break;
-
-#ifdef WITH_CUDA
-          case CUDA:
-            std::cout << "With CUDA depth processing." << std::endl;
-            if(serial_number.empty())
-              device_ = freenect2_.openDefaultDevice(new libfreenect2::CudaPacketPipeline());
-            else
-              device_ = freenect2_.openDevice(serial_number, new libfreenect2::CudaPacketPipeline());
-            break;
-#endif
-
-          default:
-            std::cout << "With OpenGL depth processing." << std::endl;
-            if (serial_number.empty())
-              device_ = freenect2_.openDefaultDevice (new libfreenect2::OpenGLPacketPipeline ());
-            else
-              device_ = freenect2_.openDevice (serial_number, new libfreenect2::OpenGLPacketPipeline ());
-            break;
-        }
-
-        if (!device_)
-        {
-          std::cout << "Warning! The device is not opened." << std::endl;
-          return;
-        }
-
-        serial_number_ = device_->getSerialNumber ();
-
-        device_->setColorFrameListener (&listener_);
-        device_->setIrAndDepthFrameListener (&listener_);
-        device_->start();
-        std::cout << "[Info] Device with serial number " << serial_number_ << " has started." << std::endl;
-
-        logger_ = libfreenect2::getGlobalLogger();
-
-        registration_ = new libfreenect2::Registration(device_->getIrCameraParams(), device_->getColorCameraParams());
-
-        prepareMake3D (device_->getIrCameraParams());
-
-#ifdef WITH_SERIALIZATION
-        serialize_ = false;
-        file_streamer_ = NULL;
-        oa_ = NULL;
-#endif
-    }
+  Kinect2Grabber::Kinect2Grabber (ProcessorType processor_type, bool mirror)
+      : processor_type_(processor_type), mirror_(mirror),
+        listener_(libfreenect2::Frame::Color | libfreenect2::Frame::Ir | libfreenect2::Frame::Depth),
+        undistorted_(512, 424, 4), registered_(512, 424, 4), big_depth_(1920, 1082, 4),
+        qnan_(std::numeric_limits<float>::quiet_NaN())
+  { }
 
   Kinect2Grabber::~Kinect2Grabber ()
   {
@@ -154,7 +77,101 @@ namespace radi {
     file_storage.release();
   }
 
-#ifdef WITH_PCL
+  void
+  Kinect2Grabber::start (std::string serial_number)
+  {
+    if (freenect2_.enumerateDevices() == 0)
+    {
+      std::cout << "Warning! No Kinect2 device is connected!" << std::endl;
+      return;
+    }
+
+    switch (processor_type_)
+    {
+      case CPU:
+        std::cout << "With CPU depth processing." << std::endl;
+        if (serial_number.empty())
+          device_ = freenect2_.openDefaultDevice (new libfreenect2::CpuPacketPipeline ());
+        else
+          device_ = freenect2_.openDevice (serial_number, new libfreenect2::CpuPacketPipeline ());
+
+        break;
+
+#ifdef WITH_OPENCL
+      case OPENCL:
+        std::cout << "With OpenCL depth processing." << std::endl;
+        if (serial_number.empty ())
+          device_ = freenect2_.openDefaultDevice(new libfreenect2::OpenCLPacketPipeline());
+        else
+          device_ = freenect2_.openDevice(serial_number, new libfreenect2::OpenCLPacketPipeline());
+        break;
+#endif
+
+      case OPENGL:
+        std::cout << "With OpenGL depth processing." << std::endl;
+        if (serial_number.empty())
+          device_ = freenect2_.openDefaultDevice (new libfreenect2::OpenGLPacketPipeline ());
+        else
+          device_ = freenect2_.openDevice (serial_number, new libfreenect2::OpenGLPacketPipeline ());
+        break;
+
+#ifdef WITH_CUDA
+      case CUDA:
+        std::cout << "With CUDA depth processing." << std::endl;
+        if(serial_number.empty())
+          device_ = freenect2_.openDefaultDevice(new libfreenect2::CudaPacketPipeline());
+        else
+          device_ = freenect2_.openDevice(serial_number, new libfreenect2::CudaPacketPipeline());
+        break;
+#endif
+
+      default:
+        std::cout << "With OpenGL depth processing." << std::endl;
+        if (serial_number.empty())
+          device_ = freenect2_.openDefaultDevice (new libfreenect2::OpenGLPacketPipeline ());
+        else
+          device_ = freenect2_.openDevice (serial_number, new libfreenect2::OpenGLPacketPipeline ());
+        break;
+    }
+
+    if (!device_)
+    {
+      std::cout << "Warning! The device is not opened." << std::endl;
+      return;
+    }
+
+    serial_number_ = device_->getSerialNumber ();
+
+    device_->setColorFrameListener (&listener_);
+    device_->setIrAndDepthFrameListener (&listener_);
+    device_->start();
+    std::cout << "[Info] Device with serial number " << serial_number_ << " has started." << std::endl;
+
+    logger_ = libfreenect2::getGlobalLogger();
+
+    registration_ = new libfreenect2::Registration(device_->getIrCameraParams(), device_->getColorCameraParams());
+
+    prepareMake3D (device_->getIrCameraParams());
+  }
+
+  bool
+  Kinect2Grabber::isOpen ()
+  {
+    if (device_)
+      return (true);
+    else
+      return (false);
+  }
+
+  void
+  Kinect2Grabber::shutDown ()
+  {
+    if (device_)
+    {
+      device_->stop();
+      device_->close();
+    }
+  }
 
   void
   Kinect2Grabber::getPointCloud (pcl::PointCloud<pcl::PointXYZRGB>::Ptr point_cloud)
@@ -162,7 +179,7 @@ namespace radi {
     listener_.waitForNewFrame(frames_);
     libfreenect2::Frame * rgb = frames_[libfreenect2::Frame::Color];
     libfreenect2::Frame * depth = frames_[libfreenect2::Frame::Depth];
-    registration_->apply (rgb, depth, &undistorted_, &registered_, true, &big_mat_, map_);
+    registration_->apply (rgb, depth, &undistorted_, &registered_, true, &big_depth_, color_depth_map_);
 
     const std::size_t width = undistorted_.width;
     const std::size_t height = undistorted_.height;
@@ -231,23 +248,6 @@ namespace radi {
       }
     }
     point_cloud->is_dense = is_dense;
-
-#ifdef WITH_SERIALIZATION
-    if(serialize_)
-      serializeCloud(point_cloud);
-#endif // WITH_SERIALIZATION
-  }
-
-#endif // WITH_PCL
-
-  void
-  Kinect2Grabber::shutDown ()
-  {
-    if (device_)
-    {
-      device_->stop();
-      device_->close();
-    }
   }
 
   // Use only if you want only depth, else use get(cv::Mat, cv::Mat) to have the images aligned
@@ -255,16 +255,14 @@ namespace radi {
   Kinect2Grabber::getDepth (cv::Mat depth_mat)
   {
     listener_.waitForNewFrame(frames_);
+
     libfreenect2::Frame * depth = frames_[libfreenect2::Frame::Depth];
-
     cv::Mat depth_tmp(depth->height, depth->width, CV_32FC1, depth->data);
+    if (mirror_ == true)
+      cv::flip(depth_tmp, depth_mat, 1);
+    else
+      depth_mat = depth_tmp.clone();
 
-    if(mirror_ == true){
-          cv::flip(depth_tmp, depth_mat, 1);
-        }else
-        {
-          depth_mat = depth_tmp.clone();
-        }
     listener_.release(frames_);
   }
 
@@ -272,16 +270,14 @@ namespace radi {
   Kinect2Grabber::getIr (cv::Mat ir_mat)
   {
     listener_.waitForNewFrame(frames_);
+
     libfreenect2::Frame * ir = frames_[libfreenect2::Frame::Ir];
-
     cv::Mat ir_tmp(ir->height, ir->width, CV_32FC1, ir->data);
+    if (mirror_ == true)
+      cv::flip(ir_tmp, ir_mat, 1);
+    else
+      ir_mat = ir_tmp.clone();
 
-    if(mirror_ == true){
-          cv::flip(ir_tmp, ir_mat, 1);
-        }else
-        {
-          ir_mat = ir_tmp.clone();
-        }
     listener_.release(frames_);
   }
 
@@ -290,16 +286,14 @@ namespace radi {
   Kinect2Grabber::getColor (cv::Mat & color_mat)
   {
     listener_.waitForNewFrame(frames_);
+
     libfreenect2::Frame * rgb = frames_[libfreenect2::Frame::Color];
-
     cv::Mat tmp_color(rgb->height, rgb->width, CV_8UC4, rgb->data);
-
-    if (mirror_ == true){
+    if (mirror_ == true)
       cv::flip(tmp_color, color_mat, 1);
-    }else
-    {
+    else
       color_mat = tmp_color.clone();
-    }
+
     listener_.release(frames_);
   }
 
@@ -308,22 +302,25 @@ namespace radi {
   Kinect2Grabber::get (cv::Mat & color_mat, cv::Mat & depth_mat, const bool full_hd, const bool remove_points)
   {
     listener_.waitForNewFrame(frames_);
+
     libfreenect2::Frame * rgb = frames_[libfreenect2::Frame::Color];
     libfreenect2::Frame * depth = frames_[libfreenect2::Frame::Depth];
-
-    registration_->apply(rgb, depth, &undistorted_, &registered_, remove_points, &big_mat_, map_);
+    registration_->apply(rgb, depth, &undistorted_, &registered_, remove_points, &big_depth_, color_depth_map_);
 
     cv::Mat tmp_depth(undistorted_.height, undistorted_.width, CV_32FC1, undistorted_.data);
     cv::Mat tmp_color;
-    if(full_hd)
+    if (full_hd)
       tmp_color = cv::Mat(rgb->height, rgb->width, CV_8UC4, rgb->data);
     else
       tmp_color = cv::Mat(registered_.height, registered_.width, CV_8UC4, registered_.data);
 
-    if(mirror_ == true) {
+    if (mirror_ == true)
+    {
       cv::flip(tmp_depth, depth_mat, 1);
       cv::flip(tmp_color, color_mat, 1);
-    }else{
+    }
+    else
+    {
       color_mat = tmp_color.clone();
       depth_mat = tmp_depth.clone();
     }
@@ -340,22 +337,25 @@ namespace radi {
     libfreenect2::Frame * depth = frames_[libfreenect2::Frame::Depth];
     libfreenect2::Frame * ir = frames_[libfreenect2::Frame::Ir];
 
-    registration_->apply(rgb, depth, &undistorted_, &registered_, remove_points, &big_mat_, map_);
+    registration_->apply(rgb, depth, &undistorted_, &registered_, remove_points, &big_depth_, color_depth_map_);
 
     cv::Mat tmp_depth(undistorted_.height, undistorted_.width, CV_32FC1, undistorted_.data);
     cv::Mat tmp_color;
     cv::Mat ir_tmp(ir->height, ir->width, CV_32FC1, ir->data);
 
-    if(full_hd)
+    if (full_hd)
       tmp_color = cv::Mat(rgb->height, rgb->width, CV_8UC4, rgb->data);
     else
       tmp_color = cv::Mat(registered_.height, registered_.width, CV_8UC4, registered_.data);
 
-    if(mirror_ == true) {
+    if (mirror_ == true)
+    {
       cv::flip(tmp_depth, depth_mat, 1);
       cv::flip(tmp_color, color_mat, 1);
       cv::flip(ir_tmp, ir_mat, 1);
-    }else{
+    }
+    else
+    {
       color_mat = tmp_color.clone();
       depth_mat = tmp_depth.clone();
       ir_mat = ir_tmp.clone();
@@ -364,7 +364,6 @@ namespace radi {
     listener_.release(frames_);
   }
 
-#ifdef WITH_PCL
   void
   Kinect2Grabber::get (cv::Mat & color_mat, cv::Mat & depth_mat, pcl::PointCloud<pcl::PointXYZRGB>::Ptr point_cloud,
       const bool full_hd, const bool remove_points)
@@ -372,7 +371,7 @@ namespace radi {
     listener_.waitForNewFrame(frames_);
     libfreenect2::Frame * rgb = frames_[libfreenect2::Frame::Color];
     libfreenect2::Frame * depth = frames_[libfreenect2::Frame::Depth];
-    registration_->apply(rgb, depth, &undistorted_, &registered_, remove_points, &big_mat_, map_);
+    registration_->apply(rgb, depth, &undistorted_, &registered_, remove_points, &big_depth_, color_depth_map_);
 
     cv::Mat tmp_depth(undistorted_.height, undistorted_.width, CV_32FC1, undistorted_.data);
     cv::Mat tmp_color;
@@ -382,10 +381,13 @@ namespace radi {
     else
       tmp_color = cv::Mat(registered_.height, registered_.width, CV_8UC4, registered_.data);
 
-    if (mirror_ == true) {
+    if (mirror_ == true)
+    {
       cv::flip(tmp_depth, depth_mat, 1);
       cv::flip(tmp_color, color_mat, 1);
-    }else{
+    }
+    else
+    {
       color_mat = tmp_color.clone();
       depth_mat = tmp_depth.clone();
     }
@@ -394,60 +396,22 @@ namespace radi {
 
     listener_.release(frames_);
   }
-#endif
-
-#ifdef WITH_SERIALIZATION
-  void
-  Kinect2Grabber::serializeFrames (const cv::Mat & depth, const cv::Mat & color)
-  {
-    std::chrono::high_resolution_clock::time_point tnow = std::chrono::high_resolution_clock::now();
-    unsigned int now = (unsigned int)std::chrono::duration_cast<std::chrono::milliseconds>(tnow.time_since_epoch()).count();
-    if(!file_streamer_){
-      file_streamer_ = new std::ofstream();
-      file_streamer_->open ("stream" + std::to_string(now), std::ios::binary);
-      oa_ = new boost::archive::binary_oarchive(*file_streamer_);
-    }
-
-    (*oa_) << now << color;
-  }
-
-  #ifdef WITH_PCL
-  void
-  Kinect2Grabber::serializeCloud (const pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud)
-  {
-    std::chrono::high_resolution_clock::time_point tnow = std::chrono::high_resolution_clock::now();
-    unsigned int now = (unsigned int)std::chrono::duration_cast<std::chrono::milliseconds>(tnow.time_since_epoch()).count();
-    if(!file_streamer_){
-      std::cout << "opening stream" << std::endl;
-      file_streamer_ = new std::ofstream();
-      file_streamer_->open ("stream" + std::to_string(now), std::ios::binary);
-    }
-
-    microser sr(*file_streamer_);
-    sr << now << (uint32_t)cloud->size();
-    for(auto &p : cloud->points){
-      sr << p.x << p.y << p.z << p.r << p.g << p.b;
-    }
-  }
-  #endif
-
-#endif
 
   void
   Kinect2Grabber::prepareMake3D (const IrCameraParams & depth_p)
   {
     const int width = 512;
     const int height = 424;
-      float * pm1 = colmap.data();
-      float * pm2 = rowmap.data();
-      for(int i = 0; i < width; i++)
-      {
-          *pm1++ = (i-depth_p.cx + 0.5) / depth_p.fx;
-      }
-      for (int i = 0; i < height; i++)
-      {
-          *pm2++ = (i-depth_p.cy + 0.5) / depth_p.fy;
-      }
+    float * pm1 = colmap.data();
+    float * pm2 = rowmap.data();
+    for(int i = 0; i < width; i++)
+    {
+        *pm1++ = (i-depth_p.cx + 0.5) / depth_p.fx;
+    }
+    for (int i = 0; i < height; i++)
+    {
+        *pm2++ = (i-depth_p.cy + 0.5) / depth_p.fy;
+    }
   }
 
 } // namespace radi

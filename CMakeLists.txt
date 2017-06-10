@@ -81,7 +81,7 @@ include_directories("/usr/local/Qt5.7.1/5.7/gcc_64/include/")
 
 # qt5_wrap_cpp(QT_MOC gui/main_window.h)
 # qt5_wrap_cpp(QT_MOC gui/main_window.cpp)
-qt5_wrap_cpp(QT_MOC_HEADERS gui/main_window.h)
+qt5_wrap_cpp(QT_MOC_HEADERS gui/main_window.h gui/thread_capture.h gui/thread_recognition.h)
 # qt4_wrap_cpp(QT_MOC gui/main_window.cpp)
 # add_library(QT_ALONE_LIB SHARED gui/main_window.h gui/main_window.cpp)
 # target_link_libraries(QT_ALONE_LIB Qt5::Widgets)
@@ -111,6 +111,8 @@ set(SRC_LIST
     distance_measurer.h
     kinect2_grabber.cpp
     gui/main_window.cpp
+    gui/thread_capture.cpp
+    gui/thread_recognition.cpp
 )
 
 # qt4_add_resources(QT_MOC_RESOURCES gui/main_window.cpp main.cpp)
